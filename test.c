@@ -26,18 +26,18 @@ unsigned int get_msec(void)
 
 int main(int argc, char **argv)
 {
-	int i, vcount = 538000;
+	int i, vcount = 538655;
 	void *kd, *set, *pset;
 	unsigned int msec, start;
     double L = 1050.0;
-    double range = 100.0;
+    double range = 400.0;
     double pos[3];
     double px, py, pz;
 
 	if(argc > 1 && isdigit(argv[1][0])) {
 		vcount = atoi(argv[1]);
 	}
-	printf("inserting %d random vectors... ", vcount);
+	printf("inserting %d random vectors...\n", vcount);
 	fflush(stdout);
 
 	kd = kd_create(3);
@@ -59,7 +59,8 @@ int main(int argc, char **argv)
     assert(kd_insert3(kd, 2, 4, 4, 0) == 0);*/
 
 	msec = get_msec() - start;
-	printf("%.3f sec\n", (float)msec / 1000.0);
+	printf("%f\n", (float)msec);
+	/*printf("%.3f sec\n", (float)msec / 1000.0);*/
 
 	start = get_msec();
 	set = kd_nearest_range3(kd, px, py, pz, range);
