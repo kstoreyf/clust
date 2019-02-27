@@ -5,9 +5,10 @@
 #include <time.h>
 #include <assert.h>
 #include <sys/time.h>
-#include "kdtree-0.5.6/kdtree.h"
-#include "kdtree-0.5.6/kdtree_periodic.h"
-#include "include/nrutil.h"
+/*#include "kdtree-0.5.6/kdtree.h"
+#include "kdtree-0.5.6/kdtree_periodic.h"*/
+#include "kdtree.h"
+#include "kdtree_periodic.h"
 
 
 /*int *ivector(long nl, long nh);
@@ -46,7 +47,7 @@ int main(int argc, char **argv)
 
 	if(argc == 5) {
 		fn = argv[1];
-		if (isdigit(argv[2][0]) && isdigit(argv[3][0])){
+		if (isdigit(argv[2][0]) && isdigit(argv[3][0]) && isdigit(argv[4][0])){
     		rmin = atof(argv[2]);
 	    	rmax = atof(argv[3]);
 	    	nrs = atoi(argv[4]);
@@ -54,13 +55,13 @@ int main(int argc, char **argv)
 	    }
 	    else{
 	        printf("Both rmin and rmax must be numbers\n");
-	        printf("./ufp.c [filename] [rmin] [rmax]\n");
+	        printf("./upf [filename] [rmin] [rmax] [nbins]\n");
 	        exit(0);
 	    }
 	}
 	else {
-	    printf("Enter exactly 3 arguments\n");
-	    printf("./ufp.c [filename] [rmin] [rmax]\n");
+	    printf("Enter exactly 4 arguments\n");
+	    printf("./upf [filename] [rmin] [rmax] [nbins]\n");
 	    exit(0);
 	}
 
@@ -108,7 +109,7 @@ int main(int argc, char **argv)
     mh = malloc(sizeof(double)*ngal);
     idx = malloc(sizeof(int)*ngal);
 
-    printf("Reading file...\n");
+    printf("Reading file %s...\n", fn);
 
     for(i = 0; i < ngal; i++){
         fscanf(fp,"%lf %lf %lf %lf %lf %lf %*d %lf",&x[i],&y[i],&z[i],&vx[i],&vy[i],&vz[i],&mh[i]);
@@ -152,9 +153,10 @@ int main(int argc, char **argv)
 
 
     FILE *fptr;
-    fptr = fopen("results/vpf.txt","w");
+    char *fnsave = "results/vpf.txt";
+    fptr = fopen(fnsave,"w");
     if(fptr == NULL){
-        printf("Error!\n");
+        printf("Error! Could not open %s for writing.\n", fnsave);
         exit(1);
     }
 
@@ -166,7 +168,7 @@ int main(int argc, char **argv)
     }
 
     fclose(fptr);
-
+    printf("Wrote results to %s\n", fnsave);
     kd_res_free(pset);
 
 	kd_free(kd);

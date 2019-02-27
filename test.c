@@ -5,10 +5,12 @@
 #include <assert.h>
 #include <sys/time.h>
 #include <time.h>
-#include "kdtree-0.5.6/kdtree.h"
+/*#include "kdtree-0.5.6/kdtree.h"
 #include "kdtree-0.5.6/kdtree_periodic.h"
-
-
+#include "../local/include/kdtree.h"
+#include "../local/include/kdtree_periodic.h"*/
+#include "kdtree.h"
+#include "kdtree_periodic.h"
 
 unsigned int get_msec(void)
 {
@@ -70,6 +72,7 @@ int main(int argc, char **argv)
     /*TODO: make sure dist returned is correct */
 	start = get_msec();
 	pset = kd_nearest_range3_periodic(kd, px, py, pz, range, L);
+  /*pset = kd_nearest_range3(kd, px, py, pz, range);*/
 	msec = get_msec() - start;
 	printf("range query returned %d items in %.5f sec\n", kd_res_size(pset), (float)msec / 1000.0);
 
