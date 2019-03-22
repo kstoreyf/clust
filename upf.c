@@ -5,13 +5,21 @@
 #include <time.h>
 #include <assert.h>
 #include <sys/time.h>
-#include "kdtree-0.5.6/kdtree.h"
-#include "kdtree-0.5.6/kdtree_periodic.h"
-#include "include/nrutil.h"
+/*#include "kdtree-0.5.6/kdtree.h"
+#include "kdtree-0.5.6/kdtree_periodic.h"*/
+#include "include/kdtree.h"
+#include "include/kdtree_periodic.h"
+/*#include "include/nrutil.h"*/
 
+
+int main(int argc, char **argv);
+void linspace(double xmin, double xmax, int xnum, double* xarr);
+void logspace(double xmin, double xmax, int xnum, double* xarr);
+unsigned int get_msec(void);
 
 /*int *ivector(long nl, long nh);
 double *dvector(long nl, long nh);*/
+
 
 unsigned int get_msec(void)
 {
