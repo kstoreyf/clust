@@ -30,7 +30,7 @@ unsigned int get_msec(void)
 
 int main(int argc, char **argv)
 {
-	char *fn;
+	char *fn, *fnsave;
 	double rmin,rmax,L,px,py,pz,range,udens;
 	double *x,*y,*z,*vx,*vy,*vz,*mh;
 	int *idx;
@@ -45,23 +45,24 @@ int main(int argc, char **argv)
 
     srand(time(NULL));
 
-	if(argc == 5) {
+	if(argc == 6) {
 		fn = argv[1];
-		if (isdigit(argv[2][0]) && isdigit(argv[3][0]) && isdigit(argv[4][0])){
+		fnsave = argv[5];
+    if (isdigit(argv[2][0]) && isdigit(argv[3][0]) && isdigit(argv[4][0])){
     		rmin = atof(argv[2]);
 	    	rmax = atof(argv[3]);
 	    	nrs = atoi(argv[4]);
-
+        
 	    }
 	    else{
 	        printf("Both rmin and rmax must be numbers\n");
-	        printf("./upf [filename] [rmin] [rmax] [nbins]\n");
+	        printf("./upf [filename] [rmin] [rmax] [nbins] [savename]\n");
 	        exit(0);
 	    }
 	}
 	else {
-	    printf("Enter exactly 4 arguments\n");
-	    printf("./upf [filename] [rmin] [rmax] [nbins]\n");
+	    printf("Enter exactly 5 arguments\n");
+	    printf("./upf [filename] [rmin] [rmax] [nbins] [savename]\n");
 	    exit(0);
 	}
 
@@ -153,7 +154,16 @@ int main(int argc, char **argv)
 
 
     FILE *fptr;
-    char *fnsave = "results/vpf.txt";
+    
+    /*const char s[2] = "/";
+    char *token;
+    token = strtok(str, s);
+    while( token != NULL ) {
+      printf( " %s\n", token );
+      token = strtok(NULL, s);
+    }
+    char *fnsave = ""    
+    char *fnsave = "/home/users/ksf293/clust/results/vpf.txt";*/
     fptr = fopen(fnsave,"w");
     if(fptr == NULL){
         printf("Error! Could not open %s for writing.\n", fnsave);
