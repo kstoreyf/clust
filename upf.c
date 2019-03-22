@@ -10,6 +10,8 @@
 #include "include/kdtree.h"
 #include "include/kdtree_periodic.h"
 /*#include "include/nrutil.h"*/
+/*#include "kdtree.h"
+#include "kdtree_periodic.h"*/
 
 
 int main(int argc, char **argv);
@@ -37,7 +39,7 @@ unsigned int get_msec(void)
 
 int main(int argc, char **argv)
 {
-	char *fn;
+	char *fn, *fnsave;
 	double rmin,rmax,L,px,py,pz,range,udens;
 	double *x,*y,*z,*vx,*vy,*vz,*mh;
 	int *idx;
@@ -52,23 +54,24 @@ int main(int argc, char **argv)
 
     srand(time(NULL));
 
-	if(argc == 5) {
+	if(argc == 6) {
 		fn = argv[1];
-		if (isdigit(argv[2][0]) && isdigit(argv[3][0])){
+		fnsave = argv[5];
+    if (isdigit(argv[2][0]) && isdigit(argv[3][0]) && isdigit(argv[4][0])){
     		rmin = atof(argv[2]);
 	    	rmax = atof(argv[3]);
 	    	nrs = atoi(argv[4]);
-
+        
 	    }
 	    else{
 	        printf("Both rmin and rmax must be numbers\n");
-	        printf("./ufp.c [filename] [rmin] [rmax]\n");
+	        printf("./upf [filename] [rmin] [rmax] [nbins] [savename]\n");
 	        exit(0);
 	    }
 	}
 	else {
-	    printf("Enter exactly 3 arguments\n");
-	    printf("./ufp.c [filename] [rmin] [rmax]\n");
+	    printf("Enter exactly 5 arguments\n");
+	    printf("./upf [filename] [rmin] [rmax] [nbins] [savename]\n");
 	    exit(0);
 	}
 
@@ -116,7 +119,7 @@ int main(int argc, char **argv)
     mh = malloc(sizeof(double)*ngal);
     idx = malloc(sizeof(int)*ngal);
 
-    printf("Reading file...\n");
+    printf("Reading file %s...\n", fn);
 
     for(i = 0; i < ngal; i++){
         fscanf(fp,"%lf %lf %lf %lf %lf %lf %*d %lf",&x[i],&y[i],&z[i],&vx[i],&vy[i],&vz[i],&mh[i]);
@@ -160,9 +163,19 @@ int main(int argc, char **argv)
 
 
     FILE *fptr;
-    fptr = fopen("results/vpf.txt","w");
+    
+    /*const char s[2] = "/";
+    char *token;
+    token = strtok(str, s);
+    while( token != NULL ) {
+      printf( " %s\n", token );
+      token = strtok(NULL, s);
+    }
+    char *fnsave = ""    
+    char *fnsave = "/home/users/ksf293/clust/results/vpf.txt";*/
+    fptr = fopen(fnsave,"w");
     if(fptr == NULL){
-        printf("Error!\n");
+        printf("Error! Could not open %s for writing.\n", fnsave);
         exit(1);
     }
 
@@ -174,7 +187,7 @@ int main(int argc, char **argv)
     }
 
     fclose(fptr);
-
+    printf("Wrote results to %s\n", fnsave);
     kd_res_free(pset);
 
 	kd_free(kd);
