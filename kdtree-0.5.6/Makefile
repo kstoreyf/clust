@@ -1,10 +1,12 @@
-PREFIX = /usr/local
+#PREFIX = /usr/local
+PREFIX = ../../local
 dbg = -g
 opt = -O3
 falloc = -DUSE_LIST_NODE_ALLOCATOR
 ldpthread = -lpthread
 shared = -dynamiclib
-so_suffix = dylib
+#so_suffix = dylib
+so_suffix = so
 pic = -fPIC
 obj = kdtree.o kdtree_periodic.o
 lib_a = libkdtree.a
@@ -35,7 +37,7 @@ clean:
 install:
 	cp kdtree.h $(PREFIX)/include/kdtree.h
 	cp kdtree_periodic.h $(PREFIX)/include/kdtree_periodic.h
-	cp $(lib_so) $(PREFIX)/lib/$(lib_so)
+	#cp $(lib_so) $(PREFIX)/lib/$(lib_so)
 	cp $(lib_a) $(PREFIX)/lib/$(lib_a)
 
 .PHONY: uninstall

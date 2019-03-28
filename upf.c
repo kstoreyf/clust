@@ -13,6 +13,7 @@
 /*#include "kdtree.h"
 #include "kdtree_periodic.h"*/
 
+#define PI 3.1415926535897932
 
 int main(int argc, char **argv);
 void linspace(double xmin, double xmax, int xnum, double* xarr);
@@ -50,7 +51,9 @@ int main(int argc, char **argv)
     FILE *fp;
 
     nspheres = 1e6;
-    udens = 0.0;
+    udens = 2e-4;
+    /*udens = 0; */
+    /* (h/Mpc)^3 */
 
     srand(time(NULL));
 
@@ -80,7 +83,7 @@ int main(int argc, char **argv)
     printf("%s\n", fn);
 
     /* Boxsize - should this be a parameter? */
-    L = 1050.0;
+    L = 1050.0; /* Mpc/h */
     ngal = 0;
     dim = 3;
 
@@ -144,6 +147,7 @@ int main(int argc, char **argv)
     /* query at radii */
     for (i=0; i<nrs; i++){
     	start = get_msec();
+      double vol = 4.0/3.0*PI*pow(radii[i], 3);
         for (j=0; j<nspheres; j++){
             /* random center of sphere */
             px = ((float)rand() / RAND_MAX) * L;
@@ -151,7 +155,7 @@ int main(int argc, char **argv)
             pz = ((float)rand() / RAND_MAX) * L;
             pset = kd_nearest_range3_periodic(kd, px, py, pz, radii[i], L);
             /* TODO: make work for underdensity, now just void */
-            if (kd_res_size(pset) <= udens) {
+            if (kd_res_size(pset)/vol <= udens) {
                 nudens[i] += 1;
             }
         }
