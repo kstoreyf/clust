@@ -1,0 +1,50 @@
+#!/bin/sh
+#PBS -N upf_test_test0
+#PBS -l nodes=1:ppn=3
+#PBS -t 0-349%100
+#PBS -o output/$PBS_JOBNAME.out
+#PBS -j oe
+  
+cd $PBS_O_WORKDIR
+
+echo "Hello from $PBS_ARRAYID..."
+# Reading config.$PBS_VNODENUM" >> myoutput.$PBS_NODENUM
+# Actual command, with data file based on $PBS_VNODENUM:
+# TRAIN
+declare -i cosmo
+declare -i box
+declare -i hod
+declare -i cb
+declare -i ncb
+declare -i ncosmos
+declare -i nboxes
+
+# hod10
+# 35 = 7 cosmos x 5 boxes
+ncosmos=7
+nboxes=5
+ncb=ncosmos*nboxes
+# if run -t 0-349, running 10 hod
+hod=${PBS_ARRAYID}/ncb
+cb=${PBS_ARRAYID}%ncb
+cosmo=cb/nboxes
+box=cb%nboxes
+savetag=""
+statistic="upf"
+
+test=0
+
+result_dir=results_$statistic/testing_${statistic}${savetag}
+mkdir -p "$PBS_O_WORKDIR/${result_dir}"
+savefn=$PBS_O_WORKDIR/${result_dir}/${statistic}_cosmo_${cosmo}_Box_${box}_HOD_${hod}_test_${test}.dat
+meanngalsfn=$PBS_O_WORKDIR/numgals/mean_numgals_testing_hod100_test0.dat
+#meanngalsfn=$PBS_O_WORKDIR/numgals/zero.dat
+cosmofn=/mount/sirocco1/zz681/emulator/CMASS/GP_Test_Box/cosmology_camb_test_box.dat
+if [ ! -f $savefn ]; then
+  echo "Computing vpf of cosmo $cosmo hod $hod savetag $savetag"
+  #mockdir=/mount/sirocco1/zz681/emulator/CMASS_BIAS/GP_Test_BOX/test_galaxy_mock
+  #mockname=cosmo_${cosmo}_Box_${box}_HOD_${hod}_test_${test}.mock
+  mockdir=/mount/sirocco2/zz681/emulator/CMASSLOWZ/test_galaxy_mocks_wp_RSD/test_galaxy_mocks_new_f_env/mocks
+  mockname=mock_cosmo_${cosmo}_Box_${box}_HOD_${hod}_test_${test}.mock
+  $PBS_O_WORKDIR/upf_zspace $mockdir/$mockname 5 45 9 $savefn $meanngalsfn $cosmofn $cosmo
+fi

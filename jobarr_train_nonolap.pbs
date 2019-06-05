@@ -1,0 +1,39 @@
+#!/bin/sh
+#PBS -N upf_train_nonolap50
+#PBS -l nodes=1:ppn=3
+#PBS -t 0-799%200
+#PBS -o output/$PBS_JOBNAME.out
+#PBS -j oe
+  
+cd $PBS_O_WORKDIR
+
+echo "Hello from $PBS_ARRAYID..."
+# TRAIN FROM SUBSAMPLE
+declare -i cosmo
+declare -i hod
+declare -i nhodpercosmo
+declare -i nhodnonolap
+nhodpercosmo=20 #can change this to get more
+nhodnonolap=100 #number of hods per cosmology, nonoverlapping, that exist
+#cosmo is line in file
+cosmo=${PBS_ARRAYID}/$nhodpercosmo
+hod=($cosmo*$nhodnonolap)+${PBS_ARRAYID}%$nhodpercosmo
+#hodidx=${PBS_ARRAYID}%$subsample
+#savetag="_nonolap$nhodepercosmo" # doesn't work (number doesn't appear)
+savetag="_nonolap"
+statistic="upf"
+
+result_dir="results_$statistic"
+mkdir -p "$PBS_O_WORKDIR/${result_dir}/training_${statistic}${savetag}"
+
+savefn=$PBS_O_WORKDIR/${result_dir}/training_${statistic}${savetag}/${statistic}_cosmo_${cosmo}_HOD_${hod}_test_0.dat
+meanngalsfn=$PBS_O_WORKDIR/numgals/mean_numgals_training_nonolap.dat
+#meanngalsfn=$PBS_O_WORKDIR/numgals/zero.dat
+cosmofn=/mount/sirocco1/zz681/emulator/CMASS/Gaussian_Process/hod_file/cosmology_camb_full.dat
+if [ ! -f $savefn ]; then
+  echo "Computing upf of cosmo $cosmo hod $hod savetag $savetag" 
+  mockdir=/mount/sirocco2/zz681/emulator/CMASSLOWZ/galaxy_mocks/mocks
+  #old: mockdir=/mount/sirocco1/zz681/emulator/CMASS_BIAS/COS_2000HOD/galaxy_mock/
+  mockname=mock_cosmo_${cosmo}_HOD_${hod}_test_0.mock
+  $PBS_O_WORKDIR/upf_zspace $mockdir/$mockname 5 45 9 $savefn $meanngalsfn $cosmofn $cosmo
+fi
