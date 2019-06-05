@@ -40,38 +40,41 @@ unsigned int get_msec(void)
 
 int main(int argc, char **argv)
 {
-	char *fn, *fnsave, *fn_ng;
-	double rmin,rmax,L,px,py,pz,range,udens,meanngals,meandens;
+	char *fn, *fnsave, *fn_ng, *fn_cosmo;
+	double rmin,rmax,L,px,py,pz,range,udens,meanngals,meandens,redshift;
+  double Omega_m, Omega_b, sigma_8, h, n_s, N_eff, w, H;
 	double *x,*y,*z,*vx,*vy,*vz,*mh;
 	int *idx;
-	int i, j, dim, ngal, nspheres, nrs, reps=1000;
+	int i, j, dim, ngal, nspheres, nrs, cosmo, reps=1000;
 	char string[1000];
   unsigned int msec,start,tbuild,torig,tperiodic;
   void *kd, *set, *pset;
-  FILE *fp, *fp_ng;
+  FILE *fp, *fp_ng, *fp_cosmo;
 
   nspheres = 1e6;
+  redshift = 0.55;
 
   srand(time(NULL));
-
-	if(argc==7) {
+	if(argc==9) {
 		fn = argv[1];
 		fnsave = argv[5];
     fn_ng = argv[6];
-    if (isdigit(argv[2][0]) && isdigit(argv[3][0]) && isdigit(argv[4][0])){
+    fn_cosmo = argv[7];
+    if (isdigit(argv[2][0]) && isdigit(argv[3][0]) && isdigit(argv[4][0]) && isdigit(argv[8][0])){
     		rmin = atof(argv[2]);
 	    	rmax = atof(argv[3]);
 	    	nrs = atoi(argv[4]);
+        cosmo = atoi(argv[8]);
 	    }
 	    else{
 	        printf("Both rmin and rmax must be numbers\n");
-	        printf("./upf [filename] [rmin] [rmax] [nbins] [savename] [meandensfile\n");
+	        printf("./upf [filename] [rmin] [rmax] [nbins] [savename] [meandensfile] [cosmoid]\n");
 	        exit(0);
 	    }
 	}
 	else {
-	    printf("Enter exactly 6 arguments\n");
-	    printf("./upf [filename] [rmin] [rmax] [nbins] [savename] [meandensfile]\n");
+	    printf("Enter exactly 8 arguments\n");
+	    printf("./upf [filename] [rmin] [rmax] [nbins] [savename] [meandensfile] [cosmofile] [cosmoid]\n");
 	    exit(0);
 	}
 
@@ -84,6 +87,22 @@ int main(int argc, char **argv)
     ngal = 0;
     dim = 3;
 
+    fp_cosmo = fopen(fn_cosmo,"r");
+    if( !(fp_cosmo=fopen(fn_cosmo,"r")) ){
+      printf("ERROR opening [%s]\n",fn_cosmo);
+      exit(0);
+    }
+    int nlines = 0;
+    for (i=0; i<cosmo+1; i++){
+      fscanf(fp_cosmo,"%lf %lf %lf %lf %lf %lf %lf", &Omega_m, &Omega_b, &sigma_8, &h, &n_s, &N_eff, &w);
+      if (nlines==cosmo) {
+        break;
+      }
+      nlines++;
+    }
+    H = (h*100.0)*pow(Omega_m*pow(1+redshift, 3) + (1-Omega_m)*pow(1+redshift, 3*(1+w)), 0.5);
+
+    /* get mean density */
     fp_ng = fopen(fn_ng,"r");
     if( !(fp_ng=fopen(fn_ng,"r")) ){
       printf("ERROR opening [%s]\n",fn_ng);
@@ -110,7 +129,7 @@ int main(int argc, char **argv)
 
     /* Load data */
     fp = fopen(fn,"r");
-	if( !(fp=fopen(fn,"r")) ){
+	  if( !(fp=fopen(fn,"r")) ){
         printf("ERROR opening [%s]\n",fn);
         exit(0);
     }
@@ -140,16 +159,21 @@ int main(int argc, char **argv)
 
     fclose(fp);
 
+    /* convert to redshift space, with line of sight along z */
+    
+    for (i=0; i<ngal; i++){
+      z[i] = z[i]+vz[i]*(1+redshift)/H;
+    }
 
     /* Build kdtree */
     kd = kd_create(dim);
 
-	start = get_msec();
-	for(i=0; i<ngal; i++) {
-		assert(kd_insert3(kd, x[i], y[i], z[i], 0) == 0);
-	}
-	msec = get_msec() - start;
-	printf("Built tree in %.3f sec\n", (float)msec / 1000.0);
+	  start = get_msec();
+	  for(i=0; i<ngal; i++) {
+		  assert(kd_insert3(kd, x[i], y[i], z[i], 0) == 0);
+	  }
+	  msec = get_msec() - start;
+	  printf("Built tree in %.3f sec\n", (float)msec / 1000.0);
     tbuild = msec;
 
     /* query at radii */

@@ -12,7 +12,7 @@ CFLAGS = -std=c89 -pedantic -Wall -g -Wformat -I$(IDIR) -nostartfiles
 
 #LIBS = -lC_main -lm
 
-_OBJ = test.o upf.o
+_OBJ = test.o upf_zspace.o
 OBJ = $(patsubst %, $(ODIR)/%,$(_OBJ))
 
 _DEPS = kdtree.h kdtree_periodic.h nrutil.h
@@ -21,8 +21,8 @@ DEPS = $(patsubst %, $(IDIR)/%,$(_DEPS))
 $(ODIR)/%.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-.PHONY: all
-all: test upf
+.PHONY: all test upf_zspace
+all: test upf_zspace
 
 #test: test.c include/nrutil.h $(kdlib)
 #test: test.c $(OBJ)
@@ -37,9 +37,9 @@ test:
 	#gcc -o test test.c kdtree.c
 	gcc -lm -lpthread -DUSE_LIST_NODE_ALLOCATOR -Wall -std=c89 -o test test.c kdtree.c kdtree_periodic.c
 
-upf:
-	gcc -lm -lpthread -DUSE_LIST_NODE_ALLOCATOR -Wall -std=c89 -o upf upf.c kdtree.c kdtree_periodic.c
+upf_zspace:
+	gcc -lm -lpthread -DUSE_LIST_NODE_ALLOCATOR -Wall -std=c89 -o upf_zspace upf_zspace.c kdtree.c kdtree_periodic.c
 
 .PHONY: clean
 clean:
-	rm -f test upf
+	rm -f test upf_zspace
