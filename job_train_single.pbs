@@ -1,32 +1,18 @@
 #!/bin/sh
-#PBS -N wp_train_nonolap50
-
-# nodes and processes per job
+#PBS -N wp_train
 #PBS -l nodes=1:ppn=1
-
-# input values 0-1999 (40 cosmo x 50 hod per cosmo = 2000)
-# only ever run 100 at a time
-#PBS -t 0-1999%100
-# #PBS -t 0-199%100
-
 #PBS -o output/$PBS_JOBNAME.out
 #PBS -j oe
   
 cd $PBS_O_WORKDIR
 
-echo "Hello from $PBS_ARRAYID..."
-# TRAIN FROM SUBSAMPLE
+echo "Hello from $PBS_NODEFILE..."
+# TRAIN FROM SINGLE MOCK
 declare -i cosmo
 declare -i hod
-declare -i nhodpercosmo
-declare -i nhodnonolap
-nhodpercosmo=50 #can change this to get more
-nhodnonolap=100 #number of hods per cosmology, nonoverlapping, that exist
-#cosmo is line in file
-cosmo=${PBS_ARRAYID}/$nhodpercosmo
-hod=($cosmo*$nhodnonolap)+${PBS_ARRAYID}%$nhodpercosmo
-#hodidx=${PBS_ARRAYID}%$subsample
-#savetag="_nonolap$nhodepercosmo" # doesn't work (number doesn't appear)
+cosmo=16
+hod=1626
+
 savetag="_nonolap"
 statistic="wp"
 
@@ -40,7 +26,6 @@ if [ ! -f $savefn ]; then
   mockdir=/mount/sirocco2/zz681/emulator/CMASSLOWZ/galaxy_mocks/mocks
   #old: mockdir=/mount/sirocco1/zz681/emulator/CMASS_BIAS/COS_2000HOD/galaxy_mock/
   mockname=mock_cosmo_${cosmo}_HOD_${hod}_test_0.mock
-  
   if [ $statistic = "upf" ]; then
     meanngalsfn=$PBS_O_WORKDIR/numgals/mean_numgals_training_nonolap.dat
     $PBS_O_WORKDIR/upf_zspace $mockdir/$mockname 5 45 9 $savefn $meanngalsfn $cosmofn $cosmo

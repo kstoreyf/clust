@@ -42,7 +42,7 @@ int main(int argc, char **argv)
 {
 	char *fn, *fnsave, *fn_ng, *fn_cosmo;
 	double rmin,rmax,L,px,py,pz,range,udens,meanngals,meandens,redshift;
-  double Omega_m, Omega_b, sigma_8, h, n_s, N_eff, w, H;
+  double Omega_m, Omega_b, sigma_8, h, n_s, N_eff, w, E;
 	double *x,*y,*z,*vx,*vy,*vz,*mh;
 	int *idx;
 	int i, j, dim, ngal, nspheres, nrs, cosmo, reps=1000;
@@ -100,7 +100,9 @@ int main(int argc, char **argv)
       }
       nlines++;
     }
-    H = (h*100.0)*pow(Omega_m*pow(1+redshift, 3) + (1-Omega_m)*pow(1+redshift, 3*(1+w)), 0.5);
+    /* E^2 = H^2/H0^2 */
+    E = pow(Omega_m*pow(1+redshift, 3) + (1-Omega_m)*pow(1+redshift, 3*(1+w)), 0.5);
+    fclose(fp_cosmo);
 
     /* get mean density */
     fp_ng = fopen(fn_ng,"r");
@@ -113,6 +115,7 @@ int main(int argc, char **argv)
     meandens = meanngals/pow(L, dim);
     printf("mean number density of mocks: %f\n",meandens);
     udens = 0.2*meandens; /* (h/Mpc)^3 */
+    fclose(fp_ng);
     
     int nudens[nrs];
     for(i=0;i<nrs;i++){
@@ -160,9 +163,17 @@ int main(int argc, char **argv)
     fclose(fp);
 
     /* convert to redshift space, with line of sight along z */
-    
+   
+    double z_zspace; 
     for (i=0; i<ngal; i++){
-      z[i] = z[i]+vz[i]*(1+redshift)/H;
+      z_zspace = z[i]+vz[i]*(1+redshift)/(E*100);
+      if (z_zspace < 0) { 
+        z_zspace += L;
+      }
+      if (z_zspace >= L) {
+        z_zspace -= L;
+      }
+      z[i] = z_zspace;
     }
 
     /* Build kdtree */
