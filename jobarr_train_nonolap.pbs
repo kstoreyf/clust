@@ -1,13 +1,12 @@
 #!/bin/sh
-#PBS -N wp_train_nonolap50
+#PBS -N upf_train_nonolap100
 
 # nodes and processes per job
-#PBS -l nodes=1:ppn=1
+#PBS -l nodes=1:ppn=3
 
 # input values 0-1999 (40 cosmo x 50 hod per cosmo = 2000)
 # only ever run 100 at a time
-#PBS -t 0-1999%100
-# #PBS -t 0-199%100
+#PBS -t 0-3999%100
 
 #PBS -o output/$PBS_JOBNAME.out
 #PBS -j oe
@@ -20,7 +19,7 @@ declare -i cosmo
 declare -i hod
 declare -i nhodpercosmo
 declare -i nhodnonolap
-nhodpercosmo=50 #can change this to get more
+nhodpercosmo=100 #can change this to get more
 nhodnonolap=100 #number of hods per cosmology, nonoverlapping, that exist
 #cosmo is line in file
 cosmo=${PBS_ARRAYID}/$nhodpercosmo
@@ -28,7 +27,7 @@ hod=($cosmo*$nhodnonolap)+${PBS_ARRAYID}%$nhodpercosmo
 #hodidx=${PBS_ARRAYID}%$subsample
 #savetag="_nonolap$nhodepercosmo" # doesn't work (number doesn't appear)
 savetag="_nonolap"
-statistic="wp"
+statistic="upf"
 
 result_dir="results_$statistic"
 mkdir -p "$PBS_O_WORKDIR/${result_dir}/training_${statistic}${savetag}"

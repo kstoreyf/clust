@@ -1,0 +1,1 @@
+./upf_zspace /mount/sirocco2/zz681/emulator/CMASSLOWZ/galaxy_mocks/mocks/mock_cosmo_1_HOD_2_test_0.mock 2 4 2 upfcheck.dat numgals/zero.dat /mount/sirocco1/zz681/emulator/CMASS/Gaussian_Process/hod_file/cosmology_camb_full.dat 3

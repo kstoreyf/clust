@@ -5,7 +5,8 @@ import numpy as np
 from Corrfunc.theory.wp import wp
 
 
-def main(filename, rmin, rmax, nbins, savename, cosmofn, cosmoid):
+
+def run_aemulus(filename, rmin, rmax, nbins, savename, cosmofn, cosmoid):
 
     # Parameters
     # should these be passed in?
@@ -27,10 +28,34 @@ def main(filename, rmin, rmax, nbins, savename, cosmofn, cosmoid):
                 (1-Omega_m)*(1+redshift)**(3*(1+w)))
     z = [real_to_zspace(z[i], vz[i], redshift, E, L) for i in range(len(z))]
 
+    compute_wprp(x, y, z, L, pimax, rmin, rmax, nbins, savename)
+
+
+def run_minerva(filename, rmin, rmax, nbins, savename, nthreads=24):
+    L = 1500.0 # Mpc/h
+    redshift = 0.57
+    pimax = 40.0
+
+    print("Loading data")
+    x, y, z, vx, vy, vz = np.loadtxt(filename, usecols=range(6), unpack=True)
+
+    Omega_m = 0.285
+    w = -1 #??
+
+    E = np.sqrt(Omega_m*(1+redshift)**3 + 
+                (1-Omega_m)*(1+redshift)**(3*(1+w)))
+    z = [real_to_zspace(z[i], vz[i], redshift, E, L) for i in range(len(z))]
+
+    compute_wprp(x, y, z, L, pimax, rmin, rmax, nbins, savename, nthreads=nthreads)
+
+
+
+def compute_wprp(x, y, z, L, pimax, rmin, rmax, nbins, savename, nthreads=1):
     # Compute wp(rp)
     print("Computing wp(rp)")
     rbins = np.logspace(np.log10(rmin), np.log10(rmax), nbins + 1) # Note the + 1 to nbins
     r_logavg = 10 ** (0.5 * (np.log10(rbins)[1:] + np.log10(rbins)[:-1]))
+
     results = wp(L, pimax, nthreads, rbins, x, y, z)
 
     print("Saving")
@@ -64,5 +89,5 @@ if __name__=='__main__':
         help='id of cosmology')
     args = parser.parse_args()
 
-    main(args.filename, args.rmin, args.rmax, args.nbins,
+    run_aemulus(args.filename, args.rmin, args.rmax, args.nbins,
             args.savename, args.cosmofn, args.cosmoid)

@@ -1,0 +1,47 @@
+#!/bin/sh
+#PBS -N upf_minerva
+#PBS -l nodes=1:ppn=3
+
+# 100 minerva mocks (%100 means 100 at a time)
+#PBS -t 0-99%100
+
+#PBS -o output/$PBS_JOBNAME.out
+#PBS -j oe
+  
+cd $PBS_O_WORKDIR
+
+echo "Hello from $PBS_ARRAYID..."
+# Reading config.$PBS_VNODENUM" >> myoutput.$PBS_NODENUM
+# Actual command, with data file based on $PBS_VNODENUM:
+# TRAIN
+declare -i nmock
+
+savetag=""
+statistic="upf"
+
+#minerva numbering is 1-indexed
+nmock=${PBS_ARRAYID}+1
+
+result_dir=results_minerva/results_minerva_${statistic}${savetag}
+mkdir -p "$PBS_O_WORKDIR/${result_dir}"
+savefn=$PBS_O_WORKDIR/${result_dir}/${statistic}_minerva_n${nmock}.dat
+if [ ! -f $savefn ]; then
+  echo "Computing statistic of minerva mock $nmock savetag $savetag"
+  nmockstr=$(printf "%03d" $nmock)
+  mockdir=/mount/sirocco1/zz681/emulator/Minerva
+  mockname=Galaxies_HOD_${nmockstr}_z0.57.dat
+  
+  if [ $statistic = "upf" ]; then
+    meanngalsfn=$PBS_O_WORKDIR/numgals/mean_numgals_minerva.dat
+    $PBS_O_WORKDIR/upf_zspace_minerva $mockdir/$mockname 5 45 9 $savefn $meanngalsfn
+  fi
+  if [ $statistic = "vpf" ]; then
+    meanngalsfn=$PBS_O_WORKDIR/numgals/zero.dat
+    $PBS_O_WORKDIR/upf_zspace_minerva $mockdir/$mockname 5 45 9 $savefn $meanngalsfn
+  fi
+  # if [ $statistic = "wp" ]; then
+  #   echo "python wprp.py $mockdir/$mockname 0.1 50 9 $savefn $cosmofn $cosmo"
+  #   python wprp.py $mockdir/$mockname 0.1 50 9 $savefn $cosmofn $cosmo
+  # fi
+
+fi

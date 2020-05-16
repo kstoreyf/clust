@@ -1,0 +1,6 @@
+*.dat
+__pycache__/
+.vscode/
+results*/
+output/
+old/
