@@ -1,10 +1,11 @@
 #!/bin/sh
-#PBS -N upf_test_test0
+#PBS -N mcf_test0
 # for upf, ppn=3; for wp, ppn=1
 #PBS -l nodes=1:ppn=3
 
 # 7 cosmologies x 5 boxes each x 100 hod
-#PBS -t 0-3499%100
+##PBS -t 0-3499%100
+#PBS -t 0-1
 
 #PBS -o output/$PBS_JOBNAME.out
 #PBS -j oe
@@ -35,7 +36,8 @@ cb=${PBS_ARRAYID}%ncb
 cosmo=cb/nboxes
 box=cb%nboxes
 savetag=""
-statistic="upf"
+statistic="marks"
+overwrite=false
 
 test=0
 
@@ -44,8 +46,8 @@ mkdir -p "$PBS_O_WORKDIR/${result_dir}"
 savefn=$PBS_O_WORKDIR/${result_dir}/${statistic}_cosmo_${cosmo}_Box_${box}_HOD_${hod}_test_${test}.dat
 #cosmofn=/mount/sirocco1/zz681/emulator/CMASS/GP_Test_Box/cosmology_camb_test_box.dat
 cosmofn=/mount/sirocco1/zz681/emulator/CMASS/Gaussian_Process/hod_file/cosmology_camb_test_box_full.dat
-if [ ! -f $savefn ]; then
-  echo "Computing vpf of cosmo $cosmo hod $hod savetag $savetag"
+if [ ! -f $savefn ] || [ $overwrite = true ]; then
+  echo "Computing $statistic of cosmo $cosmo hod $hod savetag $savetag"
   #mockdir=/mount/sirocco1/zz681/emulator/CMASS_BIAS/GP_Test_BOX/test_galaxy_mock
   #mockname=cosmo_${cosmo}_Box_${box}_HOD_${hod}_test_${test}.mock
   mockdir=/mount/sirocco2/zz681/emulator/CMASSLOWZ/test_galaxy_mocks_wp_RSD/test_galaxy_mocks_new_f_env/mocks
@@ -63,6 +65,17 @@ if [ ! -f $savefn ]; then
   if [ $statistic = "wp" ]; then
     echo "python wprp.py $mockdir/$mockname 0.1 50 9 $savefn $cosmofn $cosmo"
     python wprp.py $mockdir/$mockname 0.1 50 9 $savefn $cosmofn $cosmo
+  fi
+  if [ $statistic = "marks" ]; then
+    meanngalsfn=$PBS_O_WORKDIR/numgals/mean_numgals_testing_hod100_test0.dat
+    $PBS_O_WORKDIR/marks_zspace $mockdir/$mockname $savefn $meanngalsfn $cosmofn $cosmo
+  fi
+  if [ $statistic = "mcf" ]; then
+    echo "python markedcf.py $mockdir/$mockname 5 45 9 $savefn $cosmofn $cosmo"
+    marktag=$savetag
+    markdir=$workdir/results_marks/testing_marks${marktag}
+    markfn=${markdir}/marks_cosmo_${cosmo}_Box_${box}_HOD_${hod}_test_${test}.dat
+    python markedcf.py $mockdir/$mockname 5 45 9 $savefn $markfn $cosmofn $cosmo
   fi
 
 fi
