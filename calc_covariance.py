@@ -2,22 +2,27 @@ import numpy as np
 
 
 def main():
-    calc_cov('upf')
-    #calc_cov('wp')
+    #calc_cov(['wp','upf'])
+    calc_cov(['upf'])
 
-def calc_cov(stat):
+def calc_cov(statistics):
 
     nmocks = 100
-    res_dir = f'results_minerva/results_minerva_{stat}'
+
     arrs = []
     for n in range(1, nmocks+1):
-        fn = '{}/{}_minerva_n{}.dat'.format(res_dir, stat, n)
-        r, arr = np.loadtxt(fn, unpack=True, delimiter=',')
-        arrs.append(arr)
-    
+        arr_comb = []
+        for i, stat in enumerate(statistics):
+            res_dir = f'results_minerva/results_minerva_{stat}'
+            fn = '{}/{}_minerva_n{}.dat'.format(res_dir, stat, n)
+            r, arr = np.loadtxt(fn, unpack=True, delimiter=',')
+            arr_comb.extend(arr)
+        arrs.append(arr_comb)
+
     cov = covariance(arrs, fractional=True)
     
-    np.savetxt(f'results_minerva/{stat}_cov_minerva.dat', cov)
+    stat_str = '_'.join(statistics)
+    np.savetxt(f'covariances/cov_minerva_{stat_str}.dat', cov)
 
     #corrmat = reduced_covariance(covmat)
     #np.savetxt(f'results_minerva/covmat_minerva_{stat}.dat', covmat)

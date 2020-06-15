@@ -68,13 +68,13 @@ int main(int argc, char **argv)
 	    }
 	    else{
 	        printf("Both rmin and rmax must be numbers\n");
-	        printf("./upf [filename] [rmin] [rmax] [nbins] [savename] [meandensfile] [cosmoid]\n");
+	        printf("./upf_zspace [filename] [rmin] [rmax] [nbins] [savename] [meandensfile] [cosmoid]\n");
 	        exit(0);
 	    }
 	}
 	else {
 	    printf("Enter exactly 8 arguments\n");
-	    printf("./upf [filename] [rmin] [rmax] [nbins] [savename] [meandensfile] [cosmofile] [cosmoid]\n");
+	    printf("./upf_zspace [filename] [rmin] [rmax] [nbins] [savename] [meandensfile] [cosmofile] [cosmoid]\n");
 	    exit(0);
 	}
 
@@ -197,7 +197,6 @@ int main(int argc, char **argv)
             py = ((float)rand() / RAND_MAX) * L;
             pz = ((float)rand() / RAND_MAX) * L;
             pset = kd_nearest_range3_periodic(kd, px, py, pz, radii[i], L);
-            /* TODO: make work for underdensity, now just void */
             if (kd_res_size(pset)/vol <= udens) {
                 nudens[i] += 1;
             }

@@ -56,11 +56,11 @@ def compute_wprp(x, y, z, L, pimax, rmin, rmax, nbins, savename, nthreads=1):
     rbins = np.logspace(np.log10(rmin), np.log10(rmax), nbins + 1) # Note the + 1 to nbins
     r_logavg = 10 ** (0.5 * (np.log10(rbins)[1:] + np.log10(rbins)[:-1]))
 
-    results = wp(L, pimax, nthreads, rbins, x, y, z)
+    res = wp(L, pimax, nthreads, rbins, x, y, z)
 
     print("Saving")
     os.makedirs(os.path.dirname(savename), exist_ok=True)
-    wp_vals = results['wp']
+    wp_vals = res['wp']
     results = np.array([r_logavg, wp_vals])
     np.savetxt(savename, results.T, delimiter=',', fmt=['%f', '%e'])
 
