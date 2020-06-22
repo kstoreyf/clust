@@ -54,11 +54,11 @@ def run_minerva(filename, rmin, rmax, nbins, savename, markfn, nthreads=24):
 def compute_mcf(x, y, z, marks, L, rmin, rmax, nbins, savename, nthreads=1):
     print("Computing M(r)")
     #LOG
-    #rbins = np.logspace(np.log10(rmin), np.log10(rmax), nbins + 1) # note the + 1 to nbins
-    #r_avg = 10 ** (0.5 * (np.log10(rbins)[1:] + np.log10(rbins)[:-1]))
+    rbins = np.logspace(np.log10(rmin), np.log10(rmax), nbins + 1) # note the + 1 to nbins
+    r_avg = 10 ** (0.5 * (np.log10(rbins)[1:] + np.log10(rbins)[:-1]))
     #LINEAR
-    rbins = np.linspace(rmin, rmax, nbins + 1) # note the + 1 to nbins
-    r_avg = 0.5*(rbins[1:] + rbins[:-1])
+    #rbins = np.linspace(rmin, rmax, nbins + 1) # note the + 1 to nbins
+    #r_avg = 0.5*(rbins[1:] + rbins[:-1])
 
     autocorr=1
     res = DD(autocorr, nthreads, rbins, x, y, z, 

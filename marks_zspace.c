@@ -36,14 +36,14 @@ unsigned int get_msec(void)
 int main(int argc, char **argv)
 {
 	char *fn, *fnsave, *fn_ng, *fn_cosmo;
-	double L,px,py,pz,range,meanngals,meandens,redshift;
+	double L,meanngals,meandens,redshift;
     double Omega_m, Omega_b, sigma_8, h, n_s, N_eff, w, E;
 	double *x,*y,*z,*vx,*vy,*vz,*mh,*densities;
 	int *idx;
-	int i, j, dim, ngal, nspheres, cosmo, reps=1000;
+	int i, dim, ngal, cosmo;
 	char string[1000];
-    unsigned int msec,start,tbuild,torig,tperiodic;
-    void *kd, *set, *pset;
+    unsigned int msec,start;
+    void *kd, *pset;
     FILE *fp, *fp_ng, *fp_cosmo;
 
     redshift = 0.55;
@@ -155,27 +155,31 @@ int main(int argc, char **argv)
 	start = get_msec();
 	for(i=0; i<ngal; i++) {
 		  assert(kd_insert3(kd, x[i], y[i], z[i], 0) == 0);
-	  }
-	  msec = get_msec() - start;
-	  printf("Built tree in %.3f sec\n", (float)msec / 1000.0);
-    tbuild = msec;
+	}
+	msec = get_msec() - start;
+	printf("Built tree in %.3f sec\n", (float)msec / 1000.0);
 
     /* loop through each halo to get its local density */
     /* i think i dont need to loop radii here - single local density metric per galaxy */
     densities = malloc(sizeof(double)*ngal);
 
     start = get_msec();
-    double distance = 10.0; /*TODO: how to choose??*/
+    double distance = 10.0; /*how to choose?? --> guesstimated the same as was used in Satpathy 2019 (sdss)!*/
+    double vol_sphere = 4.0/3.0 * PI * distance*distance*distance;
     for (i=0; i<ngal; i++){
         pset = kd_nearest_range3_periodic(kd, x[i], y[i], z[i], distance, L);
-        densities[i] = (double) kd_res_size(pset); /*n neighbors*/
+        densities[i] = (double) kd_res_size(pset) / vol_sphere; /*n neighbors*/
     }
     msec = get_msec() - start;
 
-    /* compute marks using Satpathy 2019 (sdss) formula */
-    double dens_star = meandens; /*could be factor*meandens, take factor=1 for now*/
+    /* compute marks using Satpathy 2019 (sdss) eqn 5 */
+    double factor_star = 1;
+    double p = 1.5;
+    printf("factor_star=%f, p=%f\n", factor_star, p);
+    double dens_star = factor_star*meandens;
     for (i=0; i<ngal; i++){
-        densities[i] = (dens_star + meandens)/(dens_star + densities[i]);
+        /*printf("%f %f %f\n", dens_star, meandens, densities[i]);*/
+        densities[i] = pow( (dens_star + meandens)/(dens_star + densities[i]), p );
     }
 
     FILE *fptr;
