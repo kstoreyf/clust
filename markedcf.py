@@ -3,10 +3,11 @@ import argparse
 import numpy as np
 
 from Corrfunc.theory.DD import DD
+from Corrfunc.theory.xi import xi
 
 
 
-def run_aemulus(filename, rmin, rmax, nbins, savename, markfn, cosmofn, cosmoid):
+def run_aemulus(filename, rmin, rmax, nbins, savename, markfn, cosmofn, cosmoid, statistic):
 
     # Parameters
     # should these be passed in?
@@ -28,8 +29,16 @@ def run_aemulus(filename, rmin, rmax, nbins, savename, markfn, cosmofn, cosmoid)
                 (1-Omega_m)*(1+redshift)**(3*(1+w)))
     z = [real_to_zspace(z[i], vz[i], redshift, E, L) for i in range(len(z))]
 
-    compute_mcf(x, y, z, marks, L, rmin, rmax, nbins, savename, nthreads=nthreads)
-
+    if statistic=='mcf':
+        compute_mcf(x, y, z, marks, L, rmin, rmax, nbins, savename, nthreads=nthreads)
+    elif statistic=='wxi':
+        weighted_xi(x, y, z, marks, L, rmin, rmax, nbins, savename, nthreads=nthreads)
+    elif statistic=='xi':
+        weights = np.ones(len(x))
+        weighted_xi(x, y, z, weights, L, rmin, rmax, nbins, savename, nthreads=nthreads)
+    else:
+        raise ValueError(f"Statistic {statistic} not recognized! Must be 'mcf', 'wxi', or 'xi'.")
+    
 
 def run_minerva(filename, rmin, rmax, nbins, savename, markfn, nthreads=24):
     L = 1500.0 # Mpc/h
@@ -64,16 +73,35 @@ def compute_mcf(x, y, z, marks, L, rmin, rmax, nbins, savename, nthreads=1):
     res = DD(autocorr, nthreads, rbins, x, y, z, 
             weights1=marks, periodic=True, boxsize=L, weight_type="pair_product")
 
-    print(res)
     print("Saving")
     os.makedirs(os.path.dirname(savename), exist_ok=True)
-    mcf_vals = res['weightavg'] #mcf = npairs*weightavg, then divide out pairs by definition formula 
+    mcf_vals = res['weightavg'] #mcf = prefac * pairs_weighted = prefac * npairs*weightavg, where prefac divides out npairs, so left with just weightavg  
     mcf_vals /= np.mean(marks)**2 #eq 2.1, White 2016
     
     print(mcf_vals)
     results = np.array([r_avg, mcf_vals])
     np.savetxt(savename, results.T, delimiter=',', fmt=['%f', '%e'])
 
+
+def weighted_xi(x, y, z, marks, L, rmin, rmax, nbins, savename, nthreads=1):
+    print("Computing M(r)")
+    #LOG
+    rbins = np.logspace(np.log10(rmin), np.log10(rmax), nbins + 1) # note the + 1 to nbins
+    r_avg = 10 ** (0.5 * (np.log10(rbins)[1:] + np.log10(rbins)[:-1]))
+    #LINEAR
+    #rbins = np.linspace(rmin, rmax, nbins + 1) # note the + 1 to nbins
+    #r_avg = 0.5*(rbins[1:] + rbins[:-1])
+
+    res = xi(L, nthreads, rbins, x, y, z, 
+            weights=marks, weight_type="pair_product")
+
+    print("Saving")
+    os.makedirs(os.path.dirname(savename), exist_ok=True)
+    xi_vals = res['xi']
+    
+    print(xi_vals)
+    results = np.array([r_avg, xi_vals])
+    np.savetxt(savename, results.T, delimiter=',', fmt=['%f', '%e'])
 
 
 def real_to_zspace(pos, vel, redshift, E, L):
@@ -99,7 +127,8 @@ if __name__=='__main__':
         help='name of file with cosmology info')
     parser.add_argument('cosmoid', type=int, 
         help='id of cosmology')
+    parser.add_argument('statistic', type=str, help='mcf or wxi')
     args = parser.parse_args()
 
     run_aemulus(args.filename, args.rmin, args.rmax, args.nbins,
-            args.savename, args.markfn, args.cosmofn, args.cosmoid)
+            args.savename, args.markfn, args.cosmofn, args.cosmoid, args.statistic)

@@ -39,6 +39,7 @@ int main(int argc, char **argv)
 	double L,meanngals,meandens,redshift;
     double Omega_m, Omega_b, sigma_8, h, n_s, N_eff, w, E;
 	double *x,*y,*z,*vx,*vy,*vz,*mh,*densities;
+    double factor_star, p;
 	int *idx;
 	int i, dim, ngal, cosmo;
 	char string[1000];
@@ -49,23 +50,25 @@ int main(int argc, char **argv)
     redshift = 0.55;
 
     srand(time(NULL));
-	if(argc==6) {
+	if(argc==8) {
 		fn = argv[1];
 		fnsave = argv[2];
     fn_ng = argv[3];
     fn_cosmo = argv[4];
-    if (isdigit(argv[5][0])){
-        cosmo = atoi(argv[5]);
+        if (isdigit(argv[5][0]) && isdigit(argv[6][0]) && isdigit(argv[7][0])){
+            cosmo = atoi(argv[5]);
+            factor_star = atof(argv[6]);
+            p = atof(argv[7]);
 	    }
 	    else{
 	        printf("Cosmo must be an integer\n");
-	        printf("./markedcf_zspace [filename] [savename] [meandensfile] [cosmoid]\n");
+	        printf("./markedcf_zspace [filename] [savename] [meandensfile] [cosmoid] [factor_star] [p]\n");
 	        exit(0);
 	    }
 	}
 	else {
-	    printf("Enter exactly  5arguments\n");
-	    printf("./markedcf_zspace [filename] [savename] [meandensfile] [cosmofile] [cosmoid]\n");
+	    printf("Enter exactly 7 arguments\n");
+	    printf("./markedcf_zspace [filename] [savename] [meandensfile] [cosmofile] [cosmoid] [factor_star] [p]\n");
 	    exit(0);
 	}
 
@@ -171,15 +174,14 @@ int main(int argc, char **argv)
         densities[i] = (double) kd_res_size(pset) / vol_sphere; /*n neighbors*/
     }
     msec = get_msec() - start;
-
+    
     /* compute marks using Satpathy 2019 (sdss) eqn 5 */
-    double factor_star = 1;
-    double p = 1.5;
     printf("factor_star=%f, p=%f\n", factor_star, p);
     double dens_star = factor_star*meandens;
+    /*printf("WARNING, USING PADWHITE2009 MARK\n");*/
     for (i=0; i<ngal; i++){
-        /*printf("%f %f %f\n", dens_star, meandens, densities[i]);*/
         densities[i] = pow( (dens_star + meandens)/(dens_star + densities[i]), p );
+        /*densities[i] = densities[i]/(dens_star + densities[i]);*/ /* PADWHITE2009 */ 
     }
 
     FILE *fptr;

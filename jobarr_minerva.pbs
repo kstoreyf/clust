@@ -14,7 +14,7 @@ echo "Hello from $PBS_ARRAYID..."
 # Reading config.$PBS_VNODENUM" >> myoutput.$PBS_NODENUM
 # Actual command, with data file based on $PBS_VNODENUM:
 # TRAIN
-declare -i nmock
+declare -i nmock #need to declare variables to do arithmetic
 
 savetag=""
 statistic="upf"

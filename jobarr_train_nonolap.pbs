@@ -1,12 +1,13 @@
 #!/bin/sh
-#PBS -N upf_train_nonolap100
+#PBS -N mcf_train
 
 # nodes and processes per job
 #PBS -l nodes=1:ppn=3
 
 # input values 0-1999 (40 cosmo x 50 hod per cosmo = 2000)
-# only ever run 100 at a time
-#PBS -t 0-3999%100
+# 0-3999: 100 hod per cosmo
+# %100: only ever run 100 at a time
+#PBS -t 0-3999%24
 
 #PBS -o output/$PBS_JOBNAME.out
 #PBS -j oe
@@ -15,7 +16,7 @@ cd $PBS_O_WORKDIR
 
 echo "Hello from $PBS_ARRAYID..."
 # TRAIN FROM SUBSAMPLE
-declare -i cosmo
+declare -i cosmo #need to declare variables to do arithmetic
 declare -i hod
 declare -i nhodpercosmo
 declare -i nhodnonolap
@@ -24,32 +25,51 @@ nhodnonolap=100 #number of hods per cosmology, nonoverlapping, that exist
 #cosmo is line in file
 cosmo=${PBS_ARRAYID}/$nhodpercosmo
 hod=($cosmo*$nhodnonolap)+${PBS_ARRAYID}%$nhodpercosmo
-#hodidx=${PBS_ARRAYID}%$subsample
 #savetag="_nonolap$nhodepercosmo" # doesn't work (number doesn't appear)
-savetag="_nonolap"
-statistic="upf"
+#savetag="_nonolap"
+factor_star=8.0
+p=2.0
+savetag="_fstar${factor_star}_p${p}"
+statistics=("marks" "mcf")
+overwrite=true
 
-result_dir="results_$statistic"
-mkdir -p "$PBS_O_WORKDIR/${result_dir}/training_${statistic}${savetag}"
-
-savefn=$PBS_O_WORKDIR/${result_dir}/training_${statistic}${savetag}/${statistic}_cosmo_${cosmo}_HOD_${hod}_test_0.dat
+workdir=$PBS_O_WORKDIR
+test=0
 cosmofn=/mount/sirocco1/zz681/emulator/CMASS/Gaussian_Process/hod_file/cosmology_camb_full.dat
-if [ ! -f $savefn ]; then
-  echo "Computing upf of cosmo $cosmo hod $hod savetag $savetag" 
-  mockdir=/mount/sirocco2/zz681/emulator/CMASSLOWZ/galaxy_mocks/mocks
-  #old: mockdir=/mount/sirocco1/zz681/emulator/CMASS_BIAS/COS_2000HOD/galaxy_mock/
-  mockname=mock_cosmo_${cosmo}_HOD_${hod}_test_0.mock
-  
-  if [ $statistic = "upf" ]; then
-    meanngalsfn=$PBS_O_WORKDIR/numgals/mean_numgals_training_nonolap.dat
-    $PBS_O_WORKDIR/upf_zspace $mockdir/$mockname 5 45 9 $savefn $meanngalsfn $cosmofn $cosmo
+
+for statistic in ${statistics[@]}; do
+  result_dir=$workdir/results_$statistic/training_${statistic}${savetag}
+  mkdir -p "${result_dir}"
+  savefn="${result_dir}/${statistic}_cosmo_${cosmo}_HOD_${hod}_test_${test}.dat"
+
+  if [ ! -f $savefn ] || [ $overwrite = true ]; then
+    echo "Computing $statistic of cosmo $cosmo hod $hod savetag $savetag"
+    mockdir=/mount/sirocco2/zz681/emulator/CMASSLOWZ/galaxy_mocks/mocks
+    mockname=mock_cosmo_${cosmo}_HOD_${hod}_test_${test}.mock
+    
+    if [ $statistic = "upf" ]; then
+      meanngalsfn=$workdir/numgals/mean_numgals_training_nonolap.dat
+      $workdir/upf_zspace $mockdir/$mockname 5 45 9 $savefn $meanngalsfn $cosmofn $cosmo
+    fi
+    if [ $statistic = "vpf" ]; then
+      meanngalsfn=$workdir/numgals/zero.dat
+      $workdir/upf_zspace $mockdir/$mockname 5 45 9 $savefn $meanngalsfn $cosmofn $cosmo
+    fi
+    if [ $statistic = "wp" ]; then
+      echo "python wprp.py $mockdir/$mockname 0.1 50 9 $savefn $cosmofn $cosmo"
+      python wprp.py $mockdir/$mockname 0.1 50 9 $savefn $cosmofn $cosmo
+    fi
+    if [ $statistic = "marks" ]; then
+      echo "$workdir/marks_zspace $mockdir/$mockname $savefn $meanngalsfn $cosmofn $cosmo $factor_star $p"
+      meanngalsfn=$workdir/numgals/mean_numgals_training_nonolap.dat
+      $workdir/marks_zspace $mockdir/$mockname $savefn $meanngalsfn $cosmofn $cosmo $factor_star $p
+    fi
+    if [ $statistic = "mcf" ] || [ $statistic = "wxi" ] || [ $statistic = "xi" ]; then
+        echo "python markedcf.py $mockdir/$mockname 0.1 50 9 $savefn $cosmofn $cosmo"
+        marktag=$savetag
+        markdir=$workdir/results_marks/training_marks${marktag}
+        markfn=${markdir}/marks_cosmo_${cosmo}_HOD_${hod}_test_${test}.dat
+        python markedcf.py $mockdir/$mockname 0.1 50 9 $savefn $markfn $cosmofn $cosmo $statistic
+    fi
   fi
-  if [ $statistic = "vpf" ]; then
-    meanngalsfn=$PBS_O_WORKDIR/numgals/zero.dat
-    $PBS_O_WORKDIR/upf_zspace $mockdir/$mockname 5 45 9 $savefn $meanngalsfn $cosmofn $cosmo
-  fi
-  if [ $statistic = "wp" ]; then
-    echo "python wprp.py $mockdir/$mockname 0.1 50 9 $savefn $cosmofn $cosmo"
-    python wprp.py $mockdir/$mockname 0.1 50 9 $savefn $cosmofn $cosmo
-  fi
-fi
+done
