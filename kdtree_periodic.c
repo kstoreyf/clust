@@ -112,7 +112,7 @@ struct kdres *kd_nearest_range3_periodic(struct kdtree *tree,
             struct res_node *rnode;
 
             if(!(rnode = alloc_resnode())) {
-                return -1;
+                return 0;
             }
             rnode->item = res->riter->item;
             rnode->dist_sq = dist_sq;
