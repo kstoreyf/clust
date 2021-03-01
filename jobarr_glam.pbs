@@ -1,0 +1,57 @@
+#!/bin/sh
+#PBS -N upf_glam
+# for upf & mcf, use ppn=3; for wp, xi, & x2, use ppn=1
+# 24 ppn/node so if ppn=3, 8/node; note this when choosing % in following line
+#PBS -l nodes=1:ppn=3
+
+# 986 GLAM mocks (%x means x at a time)
+#PBS -t 0-985%32
+
+#PBS -o output/$PBS_JOBNAME.out
+#PBS -j oe
+  
+cd $PBS_O_WORKDIR
+
+echo "Hello from PBS_ARRAYID $PBS_ARRAYID..."
+# Reading config.$PBS_VNODENUM" >> myoutput.$PBS_NODENUM
+# Actual command, with data file based on $PBS_VNODENUM:
+# TRAIN
+declare -i nmock #need to declare variables to do arithmetic
+
+savetag=""
+#statistics=("marks" "mcf")
+statistics=("upf")
+overwrite=true
+
+nmock=${PBS_ARRAYID}
+workdir=$PBS_O_WORKDIR
+
+# GLAM paratmers (see https://arxiv.org/abs/2006.00612)
+L=1000.0
+Omega_m=0.307
+w=-1
+redshift=0.6
+
+for statistic in ${statistics[@]}; do
+
+  result_dir=results_glam/results_glam_${statistic}${savetag}
+  mkdir -p "$PBS_O_WORKDIR/${result_dir}"
+  fn_save="$PBS_O_WORKDIR/${result_dir}/${statistic}_glam_n${nmock}.dat"
+
+  if [ ! -f $savefn ] || [ $overwrite = true ]; then
+    echo "Computing $statistic for glam mock $nmock, with savetag $savetag"
+    mockdir=/mount/sirocco2/zz681/emulator/GLAM_mock/mocks2
+    mockname=mock_n${nmock}_test_0.mock
+  
+    if [ $statistic = "upf" ]; then
+      r_min=5 
+      r_max=45
+      n_radii=9
+      density_threshold_frac=0.2
+      fn_ngalsmean=$PBS_O_WORKDIR/numgals/mean_numgals_glam.dat
+      echo "$PBS_O_WORKDIR/run_upf $mockdir/$mockname $L $Omega_m $w $redshift $r_min $r_max $n_radii $density_threshold_frac $fn_ngalsmean $fn_save"
+      $PBS_O_WORKDIR/run_upf $mockdir/$mockname $L $Omega_m $w $redshift $r_min $r_max $n_radii $density_threshold_frac $fn_ngalsmean $fn_save
+    fi
+
+  fi
+done
