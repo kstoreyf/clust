@@ -1,11 +1,11 @@
 #!/bin/sh
-#PBS -N mcf_test0
-# for upf, ppn=3; for wp, ppn=1
-#PBS -l nodes=1:ppn=3
+#PBS -N xi_xi2_test0
+# for upf & mcf, use ppn=3; for wp, xi, & x2, use ppn=1
+#PBS -l nodes=1:ppn=1
 
 # 7 cosmologies x 5 boxes each x 100 hod
-##PBS -t 0-3499%100
-#PBS -t 0-1
+#PBS -t 0-3499%24
+##PBS -t 0-1
 
 #PBS -o output/$PBS_JOBNAME.out
 #PBS -j oe
@@ -36,10 +36,12 @@ cb=${PBS_ARRAYID}%ncb
 cosmo=cb/nboxes
 box=cb%nboxes
 
-factor_star=8.0
-p=2.0
-savetag="_fstar${factor_star}_p${p}"
-statistics=("marks" "mcf")
+#factor_star=8.0
+#p=1.0
+#savetag="_fstar${factor_star}_p${p}"
+savetag=""
+#statistics=("marks" "mcf")
+statistics=("xi" "xi2")
 overwrite=true
 
 test=0
@@ -73,13 +75,16 @@ for statistic in ${statistics[@]}; do
       meanngalsfn=$workdir/numgals/mean_numgals_testing_hod100_test0.dat
       $workdir/marks_zspace $mockdir/$mockname $savefn $meanngalsfn $cosmofn $cosmo $factor_star $p
     fi
-    if [ $statistic = "mcf" ]; then
-      echo "python markedcf.py $mockdir/$mockname 5 45 9 $savefn $cosmofn $cosmo"
+    if [ $statistic = "mcf" ] || [ $statistic = "wxi" ]; then
+      echo "python markedcf.py $mockdir/$mockname 0.1 50 9 $savefn $markfn $cosmofn $cosmo $statistic"
       marktag=$savetag
       markdir=$workdir/results_marks/testing_marks${marktag}
       markfn=${markdir}/marks_cosmo_${cosmo}_Box_${box}_HOD_${hod}_test_${test}.dat
       python markedcf.py $mockdir/$mockname 0.1 50 9 $savefn $markfn $cosmofn $cosmo $statistic
     fi
-
+    if [ $statistic = "xi" ] || [ $statistic = "xi2" ]; then
+      echo "python xi.py $mockdir/$mockname 0.1 50 9 $savefn $cosmofn $cosmo $statistic"
+      python xi.py $mockdir/$mockname 0.1 50 9 $savefn $cosmofn $cosmo $statistic
+    fi
   fi
 done

@@ -1,22 +1,23 @@
 #!/bin/sh
-cosmos=(2 0 4)
-hods=(3 37 42)
-boxes=(0 4 2)
+#cosmos=(2 0 4)
+#hods=(3 37 42)
+#boxes=(0 4 2)
 
-#fiducial
-#cosmos=(2)
-#hods=(3)
-#boxes=(0)
+fiducial
+cosmos=(2)
+hods=(3)
+boxes=(0)
 
-statistics=("marks" "mcf")
+#statistics=("marks" "mcf")
 #statistics=("marks" "xi" "wxi")
-#statistics=("xi")
-factor_star=8.0
-p=2.0
+statistics=("xi" "xi2")
+#factor_star=1.0
+#p=0.75
 #savetag="_investigate_fstar${factor_star}_p${p}"
 #savetag="_investigate"
 #savetag="_padwhite2009_fstar${factor_star}_p${p}"
-savetag="_investigatelin_fstar${factor_star}_p${p}"
+#savetag="_investigatelin_fstar${factor_star}_p${p}"
+savetag=""
 
 overwrite=true
 test=0
@@ -51,17 +52,21 @@ for statistic in ${statistics[@]}; do
         python wprp.py $mockdir/$mockname 0.1 50 9 $savefn $cosmofn $cosmo
       fi
       if [ $statistic = "marks" ]; then
-        echo "$workdir/marks_zspace $mockdir/$mockname $savefn $meanngalsfn $cosmofn $cosmo $facotr_star $p"
+        echo "$workdir/marks_zspace $mockdir/$mockname $savefn $meanngalsfn $cosmofn $cosmo $factor_star $p"
         meanngalsfn=$workdir/numgals/mean_numgals_testing_hod100_test0.dat
         $workdir/marks_zspace $mockdir/$mockname $savefn $meanngalsfn $cosmofn $cosmo $factor_star $p
       fi
-      if [ $statistic = "mcf" ] || [ $statistic = "wxi" ] || [ $statistic = "xi" ]; then
-        echo "python markedcf.py $mockdir/$mockname 0.1 50 9 $savefn $cosmofn $cosmo"
+      if [ $statistic = "mcf" ] || [ $statistic = "wxi" ]; then
+        echo "python markedcf.py $mockdir/$mockname 0.1 50 9 $savefn $cosmofn $cosmo $statistic"
         marktag=$savetag
         markdir=$workdir/results_marks/testing_marks${marktag}
         markfn=${markdir}/marks_cosmo_${cosmo}_Box_${box}_HOD_${hod}_test_${test}.dat
-        python markedcf.py $mockdir/$mockname 0.1 50 9 $savefn $markfn $cosmofn $cosmo $statistic
-        #python markedcf.py $mockdir/$mockname 5 100 19 $savefn $markfn $cosmofn $cosmo $statistic
+        #python markedcf.py $mockdir/$mockname 0.1 50 9 $savefn $markfn $cosmofn $cosmo $statistic
+        python markedcf.py $mockdir/$mockname 0 132 44 $savefn $markfn $cosmofn $cosmo $statistic
+      fi
+      if [ $statistic = "xi" ] || [ $statistic = "xi2" ]; then
+        echo "python xi.py $mockdir/$mockname 0.1 50 9 $savefn $cosmofn $cosmo $statistic"
+        python xi.py $mockdir/$mockname 0.1 50 9 $savefn $cosmofn $cosmo $statistic
       fi
     fi
   done

@@ -227,19 +227,3 @@ int main(int argc, char **argv)
 }
 
 
-void logspace(double xmin, double xmax, int xnum, double* xarr){
-    double logspace = (log10(xmax) - log10(xmin))/(xnum-1);
-    int i;
-    for (i=0; i<xnum; i++){
-        double logx = log10(xmin) + i*logspace;
-        xarr[i] = pow(10, logx);
-    }
-}
-
-void linspace(double xmin, double xmax, int xnum, double* xarr){
-    double space = (xmax - xmin)/(xnum-1);
-    int i;
-    for (i=0; i<xnum; i++){
-        xarr[i] = xmin + i*space;
-    }
-}

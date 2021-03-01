@@ -6,9 +6,9 @@ boxes=(0 1 2 3 4)
 
 statistics=("marks" "mcf")
 #statistics=("marks" "xi")
-factor_star=8.0
-p=1.5
-savetag="_investigate_fstar${factor_star}_p${p}"
+factor_star=1.0
+p=0.75
+savetag="_investigatelin_fstar${factor_star}_p${p}"
 #savetag="_investigate"
 
 overwrite=false
@@ -50,10 +50,12 @@ for statistic in ${statistics[@]}; do
                 fi
                 if [ $statistic = "mcf" ] || [ $statistic = "wxi" ] || [ $statistic = "xi" ]; then
                     echo "python markedcf.py $mockdir/$mockname 0.1 50 9 $savefn $cosmofn $cosmo"
-                    marktag=$savetag
+                    #marktag=$savetag
+                    marktag="_investigate_fstar${factor_star}_p${p}"
                     markdir=$workdir/results_marks/testing_marks${marktag}
                     markfn=${markdir}/marks_cosmo_${cosmo}_Box_${box}_HOD_${hod}_test_${test}.dat
-                    python markedcf.py $mockdir/$mockname 0.1 50 9 $savefn $markfn $cosmofn $cosmo $statistic
+                    #python markedcf.py $mockdir/$mockname 0.1 50 9 $savefn $markfn $cosmofn $cosmo $statistic
+                    python markedcf.py $mockdir/$mockname 0 130 52 $savefn $markfn $cosmofn $cosmo $statistic
                 fi
             fi
         done
