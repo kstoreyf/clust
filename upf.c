@@ -26,12 +26,12 @@ int compute_upf(double *x, double *y, double *z,
 
     /* Build kdtree */
     kd = kd_create(3); /* 3 is number of dimensions */
-	  start = get_msec();
-	  for(i=0; i<n_galaxies; i++) {
-		  assert(kd_insert3(kd, x[i], y[i], z[i], 0) == 0);
-	  }
-	  msec = get_msec() - start;
-	  printf("Built tree in %.3f sec\n", (float)msec / 1000.0);
+    start = get_msec();
+    for(i=0; i<n_galaxies; i++) {
+        assert(kd_insert3(kd, x[i], y[i], z[i], 0) == 0);
+    }
+    msec = get_msec() - start;
+    printf("Built tree in %.3f sec\n", (float)msec / 1000.0);
 
     /* Query kdtree at radii */
     /* Set random seed */
@@ -59,7 +59,7 @@ int compute_upf(double *x, double *y, double *z,
 
     /* Clean up */
     kd_res_free(pset);
-	  kd_free(kd);
+	kd_free(kd);
 
-	  return 0;
+	return 0;
 }

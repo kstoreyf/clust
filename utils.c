@@ -54,18 +54,11 @@ int real_to_redshift_space(double *position, double *velocity,
     /* Compute E=H/H_0 for given cosmology & redshift */
     E = pow(Omega_m*pow(1+redshift, 3) + (1-Omega_m)*pow(1+redshift, 3*(1+w)), 0.5);
 
-    double pos_zspace; 
     for (i=0; i<n_galaxies; i++){
-      pos_zspace = position[i]+velocity[i]*(1+redshift)/(E*100);
-      if (pos_zspace < 0) { 
-        pos_zspace += L;
-      }
-      if (pos_zspace >= L) {
-        pos_zspace -= L;
-      }
-      position[i] = pos_zspace;
+        /* fmod is modulus for floats */
+        position[i] = fmod( position[i]+velocity[i]*(1+redshift)/(E*100), L);
     }
-    return 0;             
+    return 0;
 }
 
 void logspace(double xmin, double xmax, int xnum, double *xarr){
