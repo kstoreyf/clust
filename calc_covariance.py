@@ -1,20 +1,23 @@
 import numpy as np
+import glob 
 
 
 def main():
-    #calc_cov(['wp','upf'])
-    calc_cov(['upf'])
+    calc_cov(['wp', 'xi', 'upf', 'mcf'], 'glam', 986)
 
-def calc_cov(statistics):
+def calc_cov(statistics, mock_tag, n_mocks):
 
-    nmocks = 100
+    n_mock_min, n_mock_max = 0, n_mocks
+    if mock_tag=='minerva':
+        n_mock_min += 1
+        n_mock_max += 1
 
     arrs = []
-    for n in range(1, nmocks+1):
+    for n in range(n_mock_min, n_mock_max):
         arr_comb = []
         for i, stat in enumerate(statistics):
-            res_dir = f'results_minerva/results_minerva_{stat}'
-            fn = '{}/{}_minerva_n{}.dat'.format(res_dir, stat, n)
+            res_dir = f'results_{mock_tag}/results_{mock_tag}_{stat}'
+            fn = f'{res_dir}/{stat}_{mock_tag}_n{n}.dat'
             r, arr = np.loadtxt(fn, unpack=True, delimiter=',')
             arr_comb.extend(arr)
         arrs.append(arr_comb)
@@ -22,7 +25,7 @@ def calc_cov(statistics):
     cov = covariance(arrs, fractional=True)
     
     stat_str = '_'.join(statistics)
-    np.savetxt(f'covariances/cov_minerva_{stat_str}.dat', cov)
+    np.savetxt(f'covariances/cov_{mock_tag}_{stat_str}.dat', cov)
 
     #corrmat = reduced_covariance(covmat)
     #np.savetxt(f'results_minerva/covmat_minerva_{stat}.dat', covmat)
