@@ -3,10 +3,12 @@ import argparse
 import numpy as np
 
 import clustering_statistics as cs
+import knn
 import utils
 
 
-def run_statistics(fn_mock, L, cosmofn, cosmoid, redshift, statistic, fn_save, r_min, r_max, n_bins, fn_marks=None, nthreads=1):
+def run_statistics(fn_mock, L, cosmofn, cosmoid, redshift, statistic, fn_save, r_min, r_max, n_bins, 
+                   fn_marks=None, knn_order_max=None):
     
     print("Loading data")
     x, y, z, _, _, vz = np.loadtxt(fn_mock, usecols=range(6), unpack=True)
@@ -31,8 +33,11 @@ def run_statistics(fn_mock, L, cosmofn, cosmoid, redshift, statistic, fn_save, r
         # Load in marks; _ column is indices in galaxy file
         marks, _ = np.loadtxt(fn_marks, delimiter=',', unpack=True) 
         cs.compute_mcf(x, y, z, marks, L, r_min, r_max, n_bins, fn_save)
+    elif statistic.startswith('knn'):
+        # kNN is order (1, 2, 3...)
+        knn.compute_knn_cdf(x, y, z, L, n_bins, knn_order_max, fn_save)
     else:
-        print(f"Statistic {statistic} not recognized! Use one of ['wp', 'xi', 'xi2', 'mcf']")
+        print(f"Statistic {statistic} not recognized! Use one of ['wp', 'xi', 'xi2', 'upf', 'mcf', 'knn']")
 
 
 if __name__=='__main__':
@@ -53,10 +58,13 @@ if __name__=='__main__':
     parser.add_argument('n_bins', type=int, help='Number of r bins')
     parser.add_argument('-fn_marks', type=str, dest='fn_marks',
         help='name of file containing marks for mcf') #optional
+    parser.add_argument('-knn_order_max', type=int, dest='knn_order_max',
+        help='order of knn to compute') #optional
     args = parser.parse_args()
 
     run_statistics(args.fn_mock, args.L, 
                    args.cosmofn, args.cosmoid, args.redshift, 
                    args.statistic, args.fn_save, 
-                   args.r_min, args.r_max, args.n_bins, fn_marks=args.fn_marks,
+                   args.r_min, args.r_max, args.n_bins, 
+                   fn_marks=args.fn_marks, knn_order_max=args.knn_order_max
                    )
