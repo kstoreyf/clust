@@ -2,8 +2,8 @@ import numpy as np
 import subprocess
 
 
-mock_dir = '/mount/sirocco2/zz681/emulator/GLAM_mock/mocks2'
-tag = '_glam'
+mock_dir = '/mount/sirocco2/zz681/emulator/GLAM_mock/mocks4'
+tag = '_glam4'
 
 nmocks = 986
 ngals_arr = []

@@ -3,7 +3,8 @@ import glob
 
 
 def main():
-    calc_cov(['wp', 'xi', 'upf', 'mcf'], 'glam', 986)
+    calc_cov(['wp', 'xi', 'upf', 'mcf'], 'glam4', 986)
+    #calc_cov(['xi'], 'glam3', 986)
 
 def calc_cov(statistics, mock_tag, n_mocks):
 
