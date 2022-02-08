@@ -12,7 +12,7 @@ nhodspercosmo = 100
 
 ngals_arr = []
 for cosmo in cosmos:
-  print cosmo
+  print(cosmo)
   hods = cosmo*nhodsnonolap + np.arange(nhodspercosmo)
   for hod in hods:
       fn = mock_dir + 'mock_cosmo_{}_HOD_{}_test_0.mock'.format(cosmo, hod)
@@ -24,9 +24,9 @@ for cosmo in cosmos:
       ngals = int(result.strip().split()[0])
       ngals_arr.append(ngals)
 
-print np.mean(ngals_arr)
-print np.std(ngals_arr)
-print np.max(ngals_arr)
-print np.min(ngals_arr)
+print( np.mean(ngals_arr) )
+print( np.std(ngals_arr) )
+print( np.max(ngals_arr) )
+print( np.min(ngals_arr) )
 
 np.savetxt("numgals/mean_numgals{}.dat".format(tag), [np.mean(ngals_arr)])
