@@ -1,81 +1,118 @@
 #!/bin/sh
-#PBS -N xi_xi2_train
+#PBS -N knn1_train
 
 # nodes and processes per job
 #PBS -l nodes=1:ppn=1
 
-# input values 0-1999 (40 cosmo x 50 hod per cosmo = 2000)
+# input values 0-3999 (40 cosmo x 100 hod per cosmo = 4000)
 # 0-3999: 100 hod per cosmo
 # %100: only ever run 100 at a time
-#PBS -t 0-3999%24
+#PBS -t 0-3999%48
+##PBS -t 0-0%1
 
-#PBS -o output/$PBS_JOBNAME.out
+#PBS -o logs/$PBS_JOBNAME.out
 #PBS -j oe
+#PBS -V
   
 cd $PBS_O_WORKDIR
 
-echo "Hello from $PBS_ARRAYID..."
+echo "Hello from ${PBS_ARRAYID} ..."
 # TRAIN FROM SUBSAMPLE
-declare -i cosmo #need to declare variables to do arithmetic
-declare -i hod
+declare -i cosmo_id #need to declare variables to do arithmetic
+declare -i hod_id
 declare -i nhodpercosmo
 declare -i nhodnonolap
-nhodpercosmo=100 #can change this to get more
+nhodpercosmo=100 #can change this to get more (up to nhodnonolap)
 nhodnonolap=100 #number of hods per cosmology, nonoverlapping, that exist
 #cosmo is line in file
-cosmo=${PBS_ARRAYID}/$nhodpercosmo
-hod=($cosmo*$nhodnonolap)+${PBS_ARRAYID}%$nhodpercosmo
-#savetag="_nonolap$nhodepercosmo" # doesn't work (number doesn't appear)
-savetag="_nonolap"
-factor_star=8.0
-p=1.0
-#savetag="_fstar${factor_star}_p${p}"
-#savetag=""
+cosmo_id=$((PBS_ARRAYID/nhodpercosmo))
+hod_id=$(( (cosmo_id*nhodnonolap)+PBS_ARRAYID%nhodpercosmo ))
+echo "cosmo ${cosmo_id}, hod ${hod_id}"
+
 #statistics=("marks" "mcf")
-statistics=("xi" "xi2")
-overwrite=true
+statistics=("knn")
+overwrite=false
+
+# Set parameters
+L=1050.0
+redshift=0.57
+knn_order_max=1
+
+# Initialize all stat parameters to -1
+r_min=-1
+r_max=-1
+n_radii=-1
+n_spheres=-1
+density_threshold_frac=-1
+radius=-1
+factor_star=-1 #8.0
+p=-1 #1.0
 
 workdir=$PBS_O_WORKDIR
 test=0
 cosmofn=/mount/sirocco1/zz681/emulator/CMASS/Gaussian_Process/hod_file/cosmology_camb_full.dat
 
 for statistic in ${statistics[@]}; do
-  result_dir=$workdir/results_$statistic/training_${statistic}${savetag}
-  mkdir -p "${result_dir}"
-  savefn="${result_dir}/${statistic}_cosmo_${cosmo}_HOD_${hod}_test_${test}.dat"
 
-  if [ ! -f $savefn ] || [ $overwrite = true ]; then
-    echo "Computing $statistic of cosmo $cosmo hod $hod savetag $savetag"
+  result_dir="/home/users/ksf293/clust/results_aemulus_train/results_$statistic"
+  if [ $statistic = "knn" ]; then
+    for knn_order in $(seq 1 ${knn_order_max})
+    do
+        result_dir_order=${result_dir}${knn_order}
+        echo ${result_dir_order}
+        mkdir -p ${result_dir_order}
+    done
+  else
+    mkdir -p "${result_dir}"
+  fi
+
+  fn_save=${result_dir}/${statistic}_cosmo_${cosmo_id}_HOD_${hod_id}_test_0.dat
+
+  # NOTE: for knn, will always overwrite, bc of how set up
+  if [ ! -f $fn_save ] || [ $overwrite = true ]; then
+    echo "Computing $statistic of cosmo ${cosmo_id} hod ${hod_id}"
     mockdir=/mount/sirocco2/zz681/emulator/CMASSLOWZ/galaxy_mocks/mocks
-    mockname=mock_cosmo_${cosmo}_HOD_${hod}_test_${test}.mock
+    mockname=mock_cosmo_${cosmo_id}_HOD_${hod_id}_test_${test}.mock
     
     if [ $statistic = "upf" ]; then
+      ## TODO: implement like in run_statistics_mock.c (as for glam)
       meanngalsfn=$workdir/numgals/mean_numgals_training_nonolap.dat
-      $workdir/upf_zspace $mockdir/$mockname 5 45 9 $savefn $meanngalsfn $cosmofn $cosmo
+      $workdir/upf_zspace $mockdir/$mockname 5 45 9 ${fn_save} $meanngalsfn $cosmofn ${cosmo_id}
     fi
     if [ $statistic = "vpf" ]; then
+      ## TODO: implement like in run_statistics_mock.c (as for glam)
       meanngalsfn=$workdir/numgals/zero.dat
-      $workdir/upf_zspace $mockdir/$mockname 5 45 9 $savefn $meanngalsfn $cosmofn $cosmo
-    fi
-    if [ $statistic = "wp" ]; then
-      echo "python wprp.py $mockdir/$mockname 0.1 50 9 $savefn $cosmofn $cosmo"
-      python wprp.py $mockdir/$mockname 0.1 50 9 $savefn $cosmofn $cosmo
+      $workdir/upf_zspace $mockdir/$mockname 5 45 9 ${fn_save} $meanngalsfn $cosmofn ${cosmo_id}
     fi
     if [ $statistic = "marks" ]; then
-      echo "$workdir/marks_zspace $mockdir/$mockname $savefn $meanngalsfn $cosmofn $cosmo $factor_star $p"
+      ## TODO: implement like in run_statistics_mock.c (as for glam)
+      echo "$workdir/marks_zspace $mockdir/$mockname ${fn_save} $meanngalsfn $cosmofn ${cosmo_id} $factor_star $p"
       meanngalsfn=$workdir/numgals/mean_numgals_training_nonolap.dat
-      $workdir/marks_zspace $mockdir/$mockname $savefn $meanngalsfn $cosmofn $cosmo $factor_star $p
+      $workdir/marks_zspace $mockdir/$mockname ${fn_save} $meanngalsfn $cosmofn ${cosmo_id} $factor_star $p
     fi
-    if [ $statistic = "mcf" ] || [ $statistic = "wxi" ]; then
-      echo "python markedcf.py $mockdir/$mockname 0.1 50 9 $savefn $cosmofn $cosmo"
-      marktag=$savetag
+    if [ $statistic = "wp" ] || [ $statistic = "xi" ] || [ $statistic = "xi2" ]; then
+      r_min=0.1
+      r_max=50.0
+      n_radii=9 #n_bins
+      echo "python run_statistics_aemulus.py $mockdir/$mockname $L $cosmofn ${cosmo_id} $redshift $statistic ${fn_save} $r_min $r_max $n_radii"
+      python run_statistics_aemulus.py $mockdir/$mockname $L $cosmofn ${cosmo_id} $redshift $statistic ${fn_save} $r_min $r_max $n_radii 
+    fi
+    if [ $statistic = "mcf" ]; then
+      r_min=0.1
+      r_max=50.0
+      n_radii=9 #n_bins
       markdir=$workdir/results_marks/training_marks${marktag}
-      markfn=${markdir}/marks_cosmo_${cosmo}_HOD_${hod}_test_${test}.dat
-      python markedcf.py $mockdir/$mockname 0.1 50 9 $savefn $markfn $cosmofn $cosmo $statistic
+      fn_marks=${markdir}/marks_cosmo_${cosmo_id}_HOD_${hod_id}_test_${test}.dat
+      
+      echo "python run_statistics_aemulus.py $mockdir/$mockname $L $cosmofn ${cosmo_id} $redshift $statistic ${fn_save} $r_min $r_max $n_radii -fn_marks=$fn_marks"
+      python run_statistics_aemulus.py $mockdir/$mockname $L $cosmofn ${cosmo_id} $redshift $statistic ${fn_save} $r_min $r_max $n_radii -fn_marks=$fn_marks
     fi
-    if [ $statistic = "xi" ] || [ $statistic = "xi2" ]; then
-      echo "python xi.py $mockdir/$mockname 0.1 50 9 $savefn $cosmofn $cosmo $statistic"
-      python xi.py $mockdir/$mockname 0.1 50 9 $savefn $cosmofn $cosmo $statistic
+      if [ $statistic = "knn" ]; then
+      r_min=0.1
+      r_max=50.0
+      n_radii=9 #n_bins
+      echo "python run_statistics_aemulus.py $mockdir/$mockname $L $cosmofn $cosmo_id $redshift $statistic ${fn_save} $r_min $r_max $n_radii"
+      python run_statistics_aemulus.py $mockdir/$mockname $L $cosmofn $cosmo_id $redshift $statistic ${fn_save} $r_min $r_max $n_radii -knn_order_max=$knn_order_max
     fi
   fi
 done

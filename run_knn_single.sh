@@ -12,8 +12,12 @@ r_min=-1
 r_max=-1
 
 result_dir="/home/users/ksf293/clust/results_aemulus_train/results_$statistic"
-mkdir -p ${result_dir}
-echo ${result_dir}
+for knn_order in $(seq 1 $knn_order_max)
+do
+    result_dir_order=$result_dir$knn_order
+    echo $result_dir_order
+    mkdir -p $result_dir_order
+done
 
 fn_save=${result_dir}/${statistic}_cosmo_${cosmo_id}_HOD_${hod_id}_test_0.dat
 cosmofn=/mount/sirocco1/zz681/emulator/CMASS/Gaussian_Process/hod_file/cosmology_camb_full.dat

@@ -5,8 +5,9 @@
 #PBS -l nodes=1:ppn=3
 
 # 986 GLAM mocks (%x means x at a time) [full: 0-985%X, X=8 per node for ppn=3, X=24 per node for ppn=1]
-#PBS -t 0-985%24
+##PBS -t 0-985%24
 ##PBS -t 0-23%24
+#PBS -t 0-1%1
 
 #PBS -o output/$PBS_JOBNAME.out
 #PBS -j oe
@@ -21,9 +22,9 @@ declare -i nmock #need to declare variables to do arithmetic
 
 savetag=""
 #statistics=("mcf")
-statistics=("upf marks mcf")
+statistics=("upf")
 #statistics=("wp xi")
-overwrite=true
+overwrite=false
 
 nmock=${PBS_ARRAYID}
 workdir=$PBS_O_WORKDIR

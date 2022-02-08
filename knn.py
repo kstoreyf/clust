@@ -111,8 +111,10 @@ def generate_knn_cdfs(pos, knn_orders, n_query, bins, boxsize=1050):
 
 # for now, knn_orders is a single number
 # TODO: rearrange to take array, compute multiple at once
+# for target_nbar: min in aemulus training nonolap: 219535,
+# so min num_dens = 219535/1050**3=1.896e-4
 def compute_knn_cdf(x, y, z, L, n_bins_per_k, knn_order_max, fn_save,
-                    n_query=400**3, target_nbar=2.0e-4):
+                    n_query=400**3, target_nbar=1.8e-4):
     knn_orders = np.arange(1, knn_order_max+1)
     print('orders:',knn_orders)
 
@@ -133,17 +135,20 @@ def compute_knn_cdf(x, y, z, L, n_bins_per_k, knn_order_max, fn_save,
     for i in range(len(knn_orders)):
         fn_save_order = add_knn_order_to_name(fn_save, knn_orders[i])
         results = np.array([bins[i,:], knn_cdfs[i,:]])
-        print(results.shape)
         print(fn_save_order)
         np.savetxt(fn_save_order, results.T, delimiter=',', fmt=['%f', '%e'])
 
 
 def add_knn_order_to_name(fn_save, knn_order):
     dir, name = os.path.split(fn_save) # get file name, without path
+    dir_split = dir.split('knn')
+    assert len(dir_split)==2, "directory should only be in name once!"
+    dir_order = dir_split[0] + 'knn' + str(knn_order) + dir_split[1]
+
     name_split = name.split('knn')
     assert len(name_split)==2, "knn should only be in name once!"
     name_order = name_split[0] + 'knn' + str(knn_order) + name_split[1]
-    return os.path.join(dir, name_order)
+    return os.path.join(dir_order, name_order)
 
 ### Usage:
 

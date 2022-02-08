@@ -42,7 +42,7 @@ def run_statistics(fn_mock, L, cosmofn, cosmoid, redshift, statistic, fn_save, r
 
 if __name__=='__main__':
     
-    parser = argparse.ArgumentParser(description='Compute w_p(r_p)')
+    parser = argparse.ArgumentParser(description='Compute statistics for Aemulus simulation boxes')
     parser.add_argument('fn_mock', type=str, 
         help='name of mock catalog file')
     parser.add_argument('L', type=float, help='Box length (Mpc/h)')
