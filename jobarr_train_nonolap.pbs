@@ -1,14 +1,16 @@
 #!/bin/sh
-#PBS -N knn1_train
+#PBS -N knn3_train
 
 # nodes and processes per job
-#PBS -l nodes=1:ppn=1
+# knn: max 1 - 30s, 5.5GB. max 2 - 47s, 7GB. max 3 - 60s, 8.3GB
+# knn tree with orders=[1,2,3] takes 8.3GB for single; nodes have 60GB, 24 cores.
+# so should set ppn=4, so then load core with max of (24/4)*8.3GB=50GB (6 per node)
+#PBS -l nodes=1:ppn=4
 
 # input values 0-3999 (40 cosmo x 100 hod per cosmo = 4000)
 # 0-3999: 100 hod per cosmo
 # %100: only ever run 100 at a time
-#PBS -t 0-3999%48
-##PBS -t 0-0%1
+#PBS -t 0-399%36
 
 #PBS -o logs/$PBS_JOBNAME.out
 #PBS -j oe
@@ -22,7 +24,7 @@ declare -i cosmo_id #need to declare variables to do arithmetic
 declare -i hod_id
 declare -i nhodpercosmo
 declare -i nhodnonolap
-nhodpercosmo=100 #can change this to get more (up to nhodnonolap)
+nhodpercosmo=10 #can change this to get more (up to nhodnonolap)
 nhodnonolap=100 #number of hods per cosmology, nonoverlapping, that exist
 #cosmo is line in file
 cosmo_id=$((PBS_ARRAYID/nhodpercosmo))
@@ -36,7 +38,7 @@ overwrite=false
 # Set parameters
 L=1050.0
 redshift=0.57
-knn_order_max=1
+knn_order_max=3
 
 # Initialize all stat parameters to -1
 r_min=-1
@@ -65,7 +67,7 @@ for statistic in ${statistics[@]}; do
   else
     mkdir -p "${result_dir}"
   fi
-
+  # TODO: check if fn_save_order_max exists, if so don't compute
   fn_save=${result_dir}/${statistic}_cosmo_${cosmo_id}_HOD_${hod_id}_test_0.dat
 
   # NOTE: for knn, will always overwrite, bc of how set up

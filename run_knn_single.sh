@@ -1,10 +1,10 @@
 declare -i cosmo_id
 declare -i hod_id
-cosmo_id=16
-hod_id=1626
+cosmo_id=17
+hod_id=1701
 
 statistic="knn"
-knn_order_max=2
+knn_order_max=3
 L=1050.0
 redshift=0.57
 n_bins=9
