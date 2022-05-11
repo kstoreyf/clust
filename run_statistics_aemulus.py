@@ -8,7 +8,7 @@ import utils
 
 
 def run_statistics(fn_mock, L, cosmofn, cosmoid, redshift, statistic, fn_save, r_min, r_max, n_bins, 
-                   fn_marks=None, knn_order_max=None):
+                   pi_max=40, fn_marks=None, knn_order_max=None):
     
     print("Loading data")
     x, y, z, _, _, vz = np.loadtxt(fn_mock, usecols=range(6), unpack=True)
@@ -21,8 +21,8 @@ def run_statistics(fn_mock, L, cosmofn, cosmoid, redshift, statistic, fn_save, r
     print("Converting to redshift space along z-axis")
     z = utils.real_to_zspace(z, vz, L, redshift, Omega_m, w)
 
-    if statistic=='wp':
-        cs.compute_wprp(x, y, z, L, r_min, r_max, n_bins, fn_save)
+    if statistic.startswith('wp'):
+        cs.compute_wprp(x, y, z, L, r_min, r_max, n_bins, fn_save, pi_max=pi_max)
     elif statistic=='xi':
         cs.compute_xi0(x, y, z, L, r_min, r_max, n_bins, fn_save)
     elif statistic=='xi2':
@@ -56,6 +56,8 @@ if __name__=='__main__':
     parser.add_argument('r_min', type=float, help='Minimum r bin')
     parser.add_argument('r_max', type=float, help='Maximum r bin')
     parser.add_argument('n_bins', type=int, help='Number of r bins')
+    parser.add_argument('-pi_max', type=float, dest='pi_max',
+             help='maximum LOS distance for wp(rp) integration') #optional
     parser.add_argument('-fn_marks', type=str, dest='fn_marks',
         help='name of file containing marks for mcf') #optional
     parser.add_argument('-knn_order_max', type=int, dest='knn_order_max',
@@ -66,5 +68,6 @@ if __name__=='__main__':
                    args.cosmofn, args.cosmoid, args.redshift, 
                    args.statistic, args.fn_save, 
                    args.r_min, args.r_max, args.n_bins, 
-                   fn_marks=args.fn_marks, knn_order_max=args.knn_order_max
+                   pi_max=args.pi_max, fn_marks=args.fn_marks, 
+                   knn_order_max=args.knn_order_max
                    )

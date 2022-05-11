@@ -1,9 +1,9 @@
 #!/bin/bash
-#PBS -N stat_test
+#PBS -N knn_check
 #PBS -l walltime=40:00:00
-#PBS -l nodes=1:ppn=3
+#PBS -l nodes=1:ppn=1
 #PBS -m ae
-#PBS -o output/$PBS_JOBNAME.out
+#PBS -o logs/$PBS_JOBNAME.out
 #PBS -j oe
 
 cd $PBS_O_WORKDIR
@@ -13,6 +13,7 @@ echo 'starting'
 echo -n 'Job is running on node '; cat $PBS_NODEFILE
 #python calc_mean_numgals_test.py
 #sh stat_loop.sh
-sh stat_test.sh
+#sh stat_test.sh
+sh run_knn_single.sh
 echo 'done'
 

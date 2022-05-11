@@ -2,11 +2,12 @@ import numpy as np
 import os
 
 
-statistic = 'xi'
+#statistic = 'xi'
 #statistic = 'wp'
 #statistic = 'upf'
 #statistic = 'mcf'
 #statistic = 'xi2'
+statistic = 'wp80'
 
 testtag = ''
 

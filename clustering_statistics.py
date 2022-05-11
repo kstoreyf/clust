@@ -7,7 +7,7 @@ from Corrfunc.theory.DD import DD
 from halotools.mock_observables import s_mu_tpcf, tpcf_multipole
 
 
-def compute_wprp(x, y, z, L, r_min, r_max, n_bins, fn_save, pimax=40.0, nthreads=1):
+def compute_wprp(x, y, z, L, r_min, r_max, n_bins, fn_save, pi_max=40.0, nthreads=1):
     # Compute wp(rp)
     print("Computing wp(rp)")
 
@@ -15,8 +15,7 @@ def compute_wprp(x, y, z, L, r_min, r_max, n_bins, fn_save, pimax=40.0, nthreads
     r_bins = np.logspace(np.log10(r_min), np.log10(r_max), n_bins + 1) # Note the + 1 to nbins
     r_avg = 10 ** (0.5 * (np.log10(r_bins)[1:] + np.log10(r_bins)[:-1]))
 
-    pimax = 40.0
-    res = wp(L, pimax, nthreads, r_bins, x, y, z)
+    res = wp(L, pi_max, nthreads, r_bins, x, y, z)
     wp_vals = res['wp']
 
     print("Saving")
@@ -24,6 +23,7 @@ def compute_wprp(x, y, z, L, r_min, r_max, n_bins, fn_save, pimax=40.0, nthreads
     os.makedirs(os.path.dirname(fn_save), exist_ok=True)
     results = np.array([r_avg, wp_vals])
     np.savetxt(fn_save, results.T, delimiter=',', fmt=['%f', '%e'])
+    return r_avg, wp_vals
 
 
 def compute_xi0(x, y, z, L, r_min, r_max, n_bins, fn_save, nthreads=1):
