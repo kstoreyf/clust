@@ -6,7 +6,8 @@ import clustering_statistics as cs
 import utils
 
 
-def run_statistics(fn_mock, L, Omega_m, w, redshift, statistic, fn_save, r_min, r_max, n_bins, fn_marks=None, nthreads=1):
+def run_statistics(fn_mock, L, Omega_m, w, redshift, statistic, fn_save, r_min, r_max, n_bins, 
+                   pi_max=40.0, fn_marks=None, nthreads=1):
     
     print("Loading data")
     x, y, z, _, _, vz = np.loadtxt(fn_mock, usecols=range(6), unpack=True)
@@ -14,8 +15,8 @@ def run_statistics(fn_mock, L, Omega_m, w, redshift, statistic, fn_save, r_min, 
     print("Converting to redshift space along z-axis")
     z = utils.real_to_zspace(z, vz, L, redshift, Omega_m, w)
 
-    if statistic=='wp':
-        cs.compute_wprp(x, y, z, L, r_min, r_max, n_bins, fn_save)
+    if statistic=='wp' or statistic=='wp80':
+        cs.compute_wprp(x, y, z, L, r_min, r_max, n_bins, fn_save, pi_max=pi_max)
     elif statistic=='xi':
         cs.compute_xi0(x, y, z, L, r_min, r_max, n_bins, fn_save)
     elif statistic=='xi2':
@@ -27,7 +28,7 @@ def run_statistics(fn_mock, L, Omega_m, w, redshift, statistic, fn_save, r_min, 
         marks, _ = np.loadtxt(fn_marks, delimiter=',', unpack=True) 
         cs.compute_mcf(x, y, z, marks, L, r_min, r_max, n_bins, fn_save)
     else:
-        print(f"Statistic {statistic} not recognized! Use one of ['wp', 'xi', 'xi2', 'mcf']")
+        print(f"Statistic {statistic} not recognized! Use one of ['wp', 'wp80', 'xi', 'xi2', 'mcf']")
 
 
 if __name__=='__main__':
@@ -44,6 +45,8 @@ if __name__=='__main__':
     parser.add_argument('r_min', type=float, help='Minimum r bin')
     parser.add_argument('r_max', type=float, help='Maximum r bin')
     parser.add_argument('n_bins', type=int, help='Number of r bins')
+    parser.add_argument('-pi_max', type=float, dest='pi_max',
+                 help='maximum LOS distance for wp(rp) integration') #optional
     parser.add_argument('-fn_marks', type=str, dest='fn_marks',
         help='name of file containing marks for mcf') #optional
     args = parser.parse_args()
@@ -51,5 +54,6 @@ if __name__=='__main__':
     run_statistics(args.fn_mock, args.L, 
                    args.Omega_m, args.w, args.redshift, 
                    args.statistic, args.fn_save, 
-                   args.r_min, args.r_max, args.n_bins, fn_marks=args.fn_marks,
+                   args.r_min, args.r_max, args.n_bins, 
+                   pi_max=args.pi_max, fn_marks=args.fn_marks,
                    )

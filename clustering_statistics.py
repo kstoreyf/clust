@@ -41,25 +41,29 @@ def compute_xi0(x, y, z, L, r_min, r_max, n_bins, fn_save, nthreads=1):
     np.savetxt(fn_save, results.T, delimiter=',', fmt=['%f', '%e'])
 
 
-
-def compute_xi2(x, y, z, L, s_min, s_max, n_sbins, fn_save, 
+def compute_xi2(x, y, z, L, r_min, r_max, n_bins, fn_save, 
         nmubins=15, nthreads=1):
     print("Computing xi_2")
     # Set up bins (log)
-    sbins = np.logspace(np.log10(smin), np.log10(smax), nsbins + 1) # note the + 1 to nbins
-    s_avg = 10 ** (0.5 * (np.log10(sbins)[1:] + np.log10(sbins)[:-1]))
+    r_bins = np.logspace(np.log10(r_min), np.log10(r_max), n_bins + 1) # note the + 1 to nbins
+    r_avg = 10 ** (0.5 * (np.log10(r_bins)[1:] + np.log10(r_bins)[:-1]))
 
     # Use halotools to compute the quadrupole, as in this example: 
     # https://halotools.readthedocs.io/en/latest/api/halotools.mock_observables.tpcf_multipole.html
     sample = np.vstack((x,y,z)).T
+    print(sample.shape)
     mu_bins = np.linspace(0, 1, nmubins)
-    xi_s_mu = s_mu_tpcf(sample, sbins, mu_bins, period=L)
-    xi_2 = tpcf_multipole(xi_s_mu, mu_bins, order=1) # Order 1 is quadrupole
+    xi_s_mu = s_mu_tpcf(sample, r_bins, mu_bins, period=L)
+    xi_2 = tpcf_multipole(xi_s_mu, mu_bins, order=2) # Order 2 is quadrupole
+    print(xi_s_mu)
+    print(xi_2)
+    print(mu_bins)
+    print(L)
 
     print("Saving")
-    os.makedirs(os.path.dirname(savename), exist_ok=True)
-    results = np.array([s_avg, xi_2])
-    np.savetxt(savename, results.T, delimiter=',', fmt=['%f', '%e'])
+    os.makedirs(os.path.dirname(fn_save), exist_ok=True)
+    results = np.array([r_avg, xi_2])
+    np.savetxt(fn_save, results.T, delimiter=',', fmt=['%f', '%e'])
 
 
 def compute_mcf(x, y, z, marks, L, r_min, r_max, n_bins, fn_save, nthreads=1):

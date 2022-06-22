@@ -1,0 +1,105 @@
+#!/bin/sh
+#PBS -N uchuu_wp80
+#PBS -l nodes=1:ppn=3
+#PBS -o logs/$PBS_JOBNAME.out
+#PBS -j oe
+#PBS -V
+  
+cd $PBS_O_WORKDIR
+
+
+savetag=""
+#statistics=("mcf")
+#statistics=("upf")
+#statistics=("wp" "xi" "xi2" "upf" "marks" "mcf")
+statistics=("wp80")
+
+#statistics=("wp xi")
+overwrite=true
+
+workdir=$PBS_O_WORKDIR
+
+# mock names
+mockdir="/mount/sirocco2/zz681/emulator/CMASSLOWZ_SHAM_Uchuu"
+mockname="vpeak_scat0.08_format.dat"
+mocktag="_uchuu"
+
+# parameters (from http://skiesanduniverses.org/Simulations/Uchuu/)
+L=2000.0 #Mpc/h
+Omega_m=0.3089 
+w=-1
+redshift=0.56 # from http://www.skiesanduniverses.org/resources/Uchuu_snapshot_redshift_scalefactor.txt
+
+# Initialize all stat parameters to -1
+# (will set them by statistic)
+r_min=-1
+r_max=-1
+n_radii=-1
+n_spheres=-1
+density_threshold_frac=-1
+radius=-1
+factor_star=-1
+p=-1
+
+for statistic in ${statistics[@]}; do
+
+  result_dir="/home/users/ksf293/clust/results${mocktag}/results_${statistic}"
+  mkdir -p ${result_dir}
+  fn_save="${result_dir}/${statistic}${mocktag}.dat"
+  if [ ! -f $fn_save ] || [ "$overwrite" == "true" ]; then
+    echo "Computing $statistic for glam mock $nmock; saving to $fn_save"
+  
+    if [ $statistic = "upf" ]; then
+      r_min=5 
+      r_max=45
+      n_radii=9
+      n_spheres=1000000 #1e6
+      density_threshold_frac=0.2
+      fn_ngalsmean=$PBS_O_WORKDIR/numgals/numgals${mocktag}.dat
+      echo "$PBS_O_WORKDIR/run_statistics_mock $mockdir/$mockname $L $Omega_m $w $redshift $statistic $fn_save $fn_ngalsmean $r_min $r_max $n_radii $n_spheres $density_threshold_frac $radius $factor_star $p"
+
+      $PBS_O_WORKDIR/run_statistics_mock $mockdir/$mockname $L $Omega_m $w $redshift $statistic $fn_save $fn_ngalsmean $r_min $r_max $n_radii $n_spheres $density_threshold_frac $radius $factor_star $p 
+    fi
+    if [ $statistic = "marks" ]; then
+      radius=10.0 
+      factor_star=8.0
+      p=1.0
+      fn_ngalsmean=$PBS_O_WORKDIR/numgals/numgals${mocktag}.dat
+      echo "$PBS_O_WORKDIR/run_statistics_mock $mockdir/$mockname $L $Omega_m $w $redshift $statistic $fn_save $fn_ngalsmean $r_min $r_max $n_radii $n_spheres $density_threshold_frac $radius $factor_star $p"
+
+      $PBS_O_WORKDIR/run_statistics_mock $mockdir/$mockname $L $Omega_m $w $redshift $statistic $fn_save $fn_ngalsmean $r_min $r_max $n_radii $n_spheres $density_threshold_frac $radius $factor_star $p 
+    fi
+    if [ $statistic = "wp" ] || [ $statistic = "wp80" ]; then
+      r_min=0.1
+      r_max=50.0
+      n_radii=9 #n_bins
+      if [ $statistic = "wp80" ]; then
+        pi_max=80.0
+      else
+        pi_max=40.0
+      fi
+      echo "python run_statistics_mock.py $mockdir/$mockname $L $Omega_m $w $redshift $statistic $fn_save $r_min $r_max $n_radii -pi_max=$pi_max"
+      python run_statistics_mock.py $mockdir/$mockname $L $Omega_m $w $redshift $statistic $fn_save $r_min $r_max $n_radii -pi_max=$pi_max 
+    fi
+    if [ $statistic = "xi" ] || [ $statistic = "xi2" ]; then
+      r_min=0.1
+      r_max=50.0
+      n_radii=9 #n_bins
+      echo "python run_statistics_mock.py $mockdir/$mockname $L $Omega_m $w $redshift $statistic $fn_save $r_min $r_max $n_radii"
+      python run_statistics_mock.py $mockdir/$mockname $L $Omega_m $w $redshift $statistic $fn_save $r_min $r_max $n_radii 
+    fi
+    if [ $statistic = "mcf" ]; then
+      r_min=0.1
+      r_max=50.0
+      n_radii=9 #n_bins
+      markdir="/home/users/ksf293/clust/results${mocktag}/results_marks"
+      fn_marks=${markdir}/marks${mocktag}.dat
+      
+      echo "python run_statistics_mock.py $mockdir/$mockname $L $Omega_m $w $redshift $statistic $fn_save $r_min $r_max $n_radii -fn_marks=$fn_marks"
+      python run_statistics_mock.py $mockdir/$mockname $L $Omega_m $w $redshift $statistic $fn_save $r_min $r_max $n_radii -fn_marks=$fn_marks
+    fi
+
+  else
+    echo "File $fn_save already exists! Skipping $statistic"
+  fi 
+done
