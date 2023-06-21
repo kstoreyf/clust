@@ -4,7 +4,7 @@
 #include <math.h>
 #include <time.h>
 
-#include "include/kdtree_periodic.h"
+#include "kdtree/include/kdtree_periodic.h"
 #include <utils.h>
 
 

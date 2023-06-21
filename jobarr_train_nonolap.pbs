@@ -1,17 +1,20 @@
 #!/bin/sh
-#PBS -N wp80_train
+##PBS -N wp_xi_xi2_fmaxmocks_train
+#PBS -N upf_marks_mcf_fmaxmocks_train
+##PBS -N mcf_fmaxmocks_train
 
 # nodes and processes per job
 # knn: max 1 - 30s, 5.5GB. max 2 - 47s, 7GB. max 3 - 60s, 8.3GB
 # knn tree with orders=[1,2,3] takes 8.3GB for single; nodes have 60GB, 24 cores.
 # so should set ppn=4, so then load core with max of (24/4)*8.3GB=50GB (6 per node)
 # for wp, xi, xi2, can use ppn=1
-#PBS -l nodes=1:ppn=1
+# marks, upf: ppn=3
+#PBS -l nodes=1:ppn=3
 
 # input values 0-3999 (40 cosmo x 100 hod per cosmo = 4000)
 # 0-3999: 100 hod per cosmo (make sure to set nhodpercosmo to 100)
-# %100: only ever run 100 at a time
-#PBS -t 0-3999%192
+# %X: only ever run X at a time
+#PBS -t 0-3999%24
 ##PBS -t 0-0%1
 
 #PBS -o logs/$PBS_JOBNAME.out
@@ -33,9 +36,11 @@ cosmo_id=$((PBS_ARRAYID/nhodpercosmo))
 hod_id=$(( (cosmo_id*nhodnonolap)+PBS_ARRAYID%nhodpercosmo ))
 echo "cosmo ${cosmo_id}, hod ${hod_id}"
 
-#statistics=("marks" "mcf")
+#statistics=("mcf")
 #statistics=("knn")
-statistics=("wp80")
+#statistics=("wp" "xi" "xi2")
+statistics=("upf" "marks" "mcf")
+#statistics=("marks" "mcf")
 overwrite=true
 
 # Set parameters
@@ -56,10 +61,13 @@ p=-1 #1.0
 workdir=$PBS_O_WORKDIR
 test=0
 cosmofn=/mount/sirocco1/zz681/emulator/CMASS/Gaussian_Process/hod_file/cosmology_camb_full.dat
+#mock_tag="_aemulus_Msatmocks_train"
+mock_tag="_aemulus_fmaxmocks_train"
 
 for statistic in ${statistics[@]}; do
 
-  result_dir="/home/users/ksf293/clust/results_aemulus_train/results_$statistic"
+  #result_dir="/home/users/ksf293/clust/results${mock_tag}/results_$statistic"
+  result_dir="/mount/sirocco1/ksf293/clust/results${mock_tag}/results_$statistic"
   if [ $statistic = "knn" ]; then
     for knn_order in $(seq 1 ${knn_order_max})
     do
@@ -76,24 +84,46 @@ for statistic in ${statistics[@]}; do
   # NOTE: for knn, will always overwrite, bc of how set up
   if [ ! -f $fn_save ] || [ $overwrite = true ]; then
     echo "Computing $statistic of cosmo ${cosmo_id} hod ${hod_id}"
-    mockdir=/mount/sirocco2/zz681/emulator/CMASSLOWZ/galaxy_mocks/mocks
+   
+    if [ $mock_tag = '_aemulus_train' ]; then
+      # mocks used for original emulators:
+      mockdir=/mount/sirocco2/zz681/emulator/CMASSLOWZ/galaxy_mocks/mocks
+    elif [ $mock_tag = '_aemulus_Msatmocks_train' ]; then
+      # mocks with expanded parameters space (esp Msat) for uchuu application:
+      mockdir=/mount/sirocco2/zz681/emulator/CMASSLOWZ_Msat/training_mocks/mocks
+    elif [ $mock_tag = '_aemulus_fmaxmocks_train' ]; then
+      # added fmax param, plus expanded sigmalogm (and Msat expanded)
+      mockdir=/mount/sirocco1/zz681/emulator/CMASSLOWZ_Msat_fmax_new/training_mocks/mocks
+    fi
     mockname=mock_cosmo_${cosmo_id}_HOD_${hod_id}_test_${test}.mock
     
     if [ $statistic = "upf" ]; then
-      ## TODO: implement like in run_statistics_mock.c (as for glam)
-      meanngalsfn=$workdir/numgals/mean_numgals_training_nonolap.dat
-      $workdir/upf_zspace $mockdir/$mockname 5 45 9 ${fn_save} $meanngalsfn $cosmofn ${cosmo_id}
+      r_min=5
+      r_max=45
+      n_radii=9
+      n_spheres=1000000 #1e6
+      density_threshold_frac=0.2
+      fn_ngalsmean=$PBS_O_WORKDIR/numgals/mean_numgals${mock_tag}.dat
+      echo "$PBS_O_WORKDIR/run_statistics_aemulus $mockdir/$mockname $L $cosmofn ${cosmo_id} $redshift $statistic $fn_save $fn_ngalsmean $r_min $r_max $n_radii $n_spheres $density_threshold_frac $radius $factor_star $p"
+      $PBS_O_WORKDIR/run_statistics_aemulus $mockdir/$mockname $L $cosmofn ${cosmo_id} $redshift $statistic $fn_save $fn_ngalsmean $r_min $r_max $n_radii $n_spheres $density_threshold_frac $radius $factor_star $p
     fi
     if [ $statistic = "vpf" ]; then
-      ## TODO: implement like in run_statistics_mock.c (as for glam)
-      meanngalsfn=$workdir/numgals/zero.dat
-      $workdir/upf_zspace $mockdir/$mockname 5 45 9 ${fn_save} $meanngalsfn $cosmofn ${cosmo_id}
+      r_min=5
+      r_max=45
+      n_radii=9
+      n_spheres=1000000 #1e6
+      density_threshold_frac=0.0
+      fn_ngalsmean=$PBS_O_WORKDIR/numgals/mean_numgals${mock_tag}.dat
+      echo "$PBS_O_WORKDIR/run_statistics_aemulus $mockdir/$mockname $L $cosmofn ${cosmo_id} $redshift $statistic $fn_save $fn_ngalsmean $r_min $r_max $n_radii $n_spheres $density_threshold_frac $radius $factor_star $p"
+      $PBS_O_WORKDIR/run_statistics_aemulus $mockdir/$mockname $L $cosmofn ${cosmo_id} $redshift $statistic $fn_save $fn_ngalsmean $r_min $r_max $n_radii $n_spheres $density_threshold_frac $radius $factor_star $p
     fi
     if [ $statistic = "marks" ]; then
-      ## TODO: implement like in run_statistics_mock.c (as for glam)
-      echo "$workdir/marks_zspace $mockdir/$mockname ${fn_save} $meanngalsfn $cosmofn ${cosmo_id} $factor_star $p"
-      meanngalsfn=$workdir/numgals/mean_numgals_training_nonolap.dat
-      $workdir/marks_zspace $mockdir/$mockname ${fn_save} $meanngalsfn $cosmofn ${cosmo_id} $factor_star $p
+      radius=10.0
+      factor_star=8.0
+      p=1.0
+      fn_ngalsmean=$PBS_O_WORKDIR/numgals/mean_numgals${mock_tag}.dat
+      echo "$PBS_O_WORKDIR/run_statistics_aemulus $mockdir/$mockname $L $cosmofn ${cosmo_id} $redshift $statistic $fn_save $fn_ngalsmean $r_min $r_max $n_radii $n_spheres $density_threshold_frac $radius $factor_star $p"
+      $PBS_O_WORKDIR/run_statistics_aemulus $mockdir/$mockname $L $cosmofn ${cosmo_id} $redshift $statistic $fn_save $fn_ngalsmean $r_min $r_max $n_radii $n_spheres $density_threshold_frac $radius $factor_star $p
     fi
     if [ $statistic = "wp" ] || [ $statistic = "wp80" ]; then
       r_min=0.1
@@ -118,7 +148,7 @@ for statistic in ${statistics[@]}; do
       r_min=0.1
       r_max=50.0
       n_radii=9 #n_bins
-      markdir=$workdir/results_marks/training_marks${marktag}
+      markdir="/mount/sirocco1/ksf293/clust/results${mock_tag}/results_marks"
       fn_marks=${markdir}/marks_cosmo_${cosmo_id}_HOD_${hod_id}_test_${test}.dat
       
       echo "python run_statistics_aemulus.py $mockdir/$mockname $L $cosmofn ${cosmo_id} $redshift $statistic ${fn_save} $r_min $r_max $n_radii -fn_marks=$fn_marks"

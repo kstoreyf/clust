@@ -1,15 +1,15 @@
 #!/bin/sh
-#PBS -N upf_marks_mcf_glam4
+#PBS -N glam_xi2
 # for upf & marks, use ppn=3; for wp, xi, x2, mcf, use ppn=1
 # 24 ppn/node so if ppn=3, 8/node; note this when choosing % in following line
-#PBS -l nodes=1:ppn=3
+#PBS -l nodes=1:ppn=1
 
 # 986 GLAM mocks (%x means x at a time) [full: 0-985%X, X=8 per node for ppn=3, X=24 per node for ppn=1]
-##PBS -t 0-985%24
+#PBS -t 0-985%96
 ##PBS -t 0-23%24
-#PBS -t 0-1%1
+##PBS -t 0-0%1
 
-#PBS -o output/$PBS_JOBNAME.out
+#PBS -o logs/$PBS_JOBNAME.out
 #PBS -j oe
   
 cd $PBS_O_WORKDIR
@@ -22,15 +22,25 @@ declare -i nmock #need to declare variables to do arithmetic
 
 savetag=""
 #statistics=("mcf")
-statistics=("upf")
+statistics=("xi2")
 #statistics=("wp xi")
 overwrite=false
 
 nmock=${PBS_ARRAYID}
 workdir=$PBS_O_WORKDIR
 
+mocktag="_glam"
+
+if [ $mocktag = "_glam" ]; then
+    mockdir=/mount/sirocco2/zz681/emulator/GLAM_mock/mocks2
+elif [ $mocktag = "_glam4" ]; then
+    mockdir=/mount/sirocco2/zz681/emulator/GLAM_mock/mocks4
+else
+    echo "Mock tag $mocktag not recognized!"
+    exit 1
+fi
+
 # GLAM paratmers (see https://arxiv.org/abs/2006.00612)
-mockdir=/mount/sirocco2/zz681/emulator/GLAM_mock/mocks4
 L=1000.0
 Omega_m=0.307
 w=-1
@@ -48,9 +58,9 @@ p=-1
 
 for statistic in ${statistics[@]}; do
 
-  result_dir=results_glam4/results_glam4_${statistic}${savetag}
+  result_dir=results${mocktag}/results_${statistic}${savetag}
   mkdir -p "$PBS_O_WORKDIR/${result_dir}"
-  fn_save="$PBS_O_WORKDIR/${result_dir}/${statistic}_glam4_n${nmock}.dat"
+  fn_save="$PBS_O_WORKDIR/${result_dir}/${statistic}${mocktag}_n${nmock}.dat"
   if [ ! -f $fn_save ] || [ "$overwrite" == "true" ]; then
     echo "Computing $statistic for glam mock $nmock; saving to $fn_save"
     mockname=mock_n${nmock}_test_0.mock
@@ -61,7 +71,7 @@ for statistic in ${statistics[@]}; do
       n_radii=9
       n_spheres=1000000 #1e6
       density_threshold_frac=0.2
-      fn_ngalsmean=$PBS_O_WORKDIR/numgals/mean_numgals_glam4.dat
+      fn_ngalsmean=$PBS_O_WORKDIR/numgals/mean_numgals${mocktag}.dat
       echo "$PBS_O_WORKDIR/run_statistics_mock $mockdir/$mockname $L $Omega_m $w $redshift $statistic $fn_save $fn_ngalsmean $r_min $r_max $n_radii $n_spheres $density_threshold_frac $radius $factor_star $p"
 
       $PBS_O_WORKDIR/run_statistics_mock $mockdir/$mockname $L $Omega_m $w $redshift $statistic $fn_save $fn_ngalsmean $r_min $r_max $n_radii $n_spheres $density_threshold_frac $radius $factor_star $p 
@@ -70,7 +80,7 @@ for statistic in ${statistics[@]}; do
       radius=10.0 
       factor_star=8.0
       p=1.0
-      fn_ngalsmean=$PBS_O_WORKDIR/numgals/mean_numgals_glam4.dat
+      fn_ngalsmean=$PBS_O_WORKDIR/numgals/mean_numgals${mocktag}.dat
       echo "$PBS_O_WORKDIR/run_statistics_mock $mockdir/$mockname $L $Omega_m $w $redshift $statistic $fn_save $fn_ngalsmean $r_min $r_max $n_radii $n_spheres $density_threshold_frac $radius $factor_star $p"
 
       $PBS_O_WORKDIR/run_statistics_mock $mockdir/$mockname $L $Omega_m $w $redshift $statistic $fn_save $fn_ngalsmean $r_min $r_max $n_radii $n_spheres $density_threshold_frac $radius $factor_star $p 
@@ -86,8 +96,8 @@ for statistic in ${statistics[@]}; do
       r_min=0.1
       r_max=50.0
       n_radii=9 #n_bins
-      markdir=$workdir/results_glam4/results_glam4_marks${savetag}
-      fn_marks=${markdir}/marks_glam4_n${nmock}.dat
+      markdir=$workdir/results${mocktag}/results${mocktag}_marks${savetag}
+      fn_marks=${markdir}/marks${mocktag}_n${nmock}.dat
       
       echo "python run_statistics_mock.py $mockdir/$mockname $L $Omega_m $w $redshift $statistic $fn_save $r_min $r_max $n_radii -fn_marks=$fn_marks"
       python run_statistics_mock.py $mockdir/$mockname $L $Omega_m $w $redshift $statistic $fn_save $r_min $r_max $n_radii -fn_marks=$fn_marks
