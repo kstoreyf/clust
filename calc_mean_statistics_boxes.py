@@ -5,7 +5,8 @@ import os
 statistics = ['wp', 'xi', 'xi2', 'mcf', 'upf']
 #statistics = ['mcf', 'upf']
 
-mock_tag = '_aemulus_fmaxmocks_test'
+#mock_tag = '_aemulus_fmaxmocks_test'
+mock_tag = '_aemulus_fmaxmocks_test_plus'
 testtag = ''
 
 nbins = 9
@@ -13,14 +14,18 @@ nhods = 100
 testids = range(1)
 boxids = range(5)
 
+if mock_tag=='_aemulus_fmaxmocks_test':
+    CC_test = range(0, 7)
+    HH_test = range(0, nhods)
+elif mock_tag=='_aemulus_fmaxmocks_test_minus' or mock_tag=='_aemulus_fmaxmocks_test_plus':
+    CC_test = [1]
+    HH_test = [19]
+
 for statistic in statistics:
     print("stat:", statistic)
     testing_dir = f'/mount/sirocco1/ksf293/clust/results{mock_tag}/results_{statistic}'
     testmean_dir = f'/mount/sirocco1/ksf293/clust/results{mock_tag}_mean/results_{statistic}'
     os.makedirs(testmean_dir, exist_ok=True)
-
-    CC_test = range(0, 7)
-    HH_test = range(0, nhods)
 
     for CID_test in CC_test:
         for HID_test in HH_test:
