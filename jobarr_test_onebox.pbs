@@ -1,7 +1,7 @@
 #!/bin/sh
 ##PBS -N wp_xi_xi2_fmaxmocks_testmocks
 ##PBS -N upf_marks_mcf_fmaxmocks_testmocks
-#PBS -N wp_xi_xi2_upf_mcf_fmaxmocks_testmocks_sminus
+#PBS -N wp_xi_xi2_upf_mcf_fmaxmocks_testmocks_plus1_c6h69
 
 # nodes and processes per job
 # knn: max 1 - 30s, 5.5GB. max 2 - 47s, 7GB. max 3 - 60s, 8.3GB
@@ -31,8 +31,8 @@ declare -i ncb
 declare -i ncosmos
 declare -i nboxes
 
-hod_id=19
-cosmo_id=1
+cosmo_id=6
+hod_id=69
 box=${PBS_ARRAYID}
 
 #statistics=("mcf")
@@ -56,11 +56,12 @@ radius=-1
 factor_star=-1 #8.0
 p=-1 #1.0
 
-mock_tag="_aemulus_fmaxmocks_test_plus"
-#mock_tag="_aemulus_fmaxmocks_test_minus"
+mock_tag="_aemulus_fmaxmocks_test_plus1"
+#mock_tag="_aemulus_fmaxmocks_test_minus1"
 workdir=$PBS_O_WORKDIR
 test=0
 cosmofn=/mount/sirocco1/zz681/emulator/CMASS/Gaussian_Process/hod_file/cosmology_camb_test_box_full.dat
+fn_ngalsmean=$PBS_O_WORKDIR/numgals/mean_numgals${mock_tag}_c${cosmo_id}h${hod_id}.dat
 
 for statistic in ${statistics[@]}; do
 
@@ -95,6 +96,10 @@ for statistic in ${statistics[@]}; do
       mockdir=/mount/sirocco1/zz681/emulator/CMASSLOWZ_Msat_fmax_new/test_mocks_Aemulus6_NumberDensity/mocks_minus
     elif [ $mock_tag = '_aemulus_fmaxmocks_test_plus' ]; then
       mockdir=/mount/sirocco1/zz681/emulator/CMASSLOWZ_Msat_fmax_new/test_mocks_Aemulus6_NumberDensity/mocks_plus
+    elif [ $mock_tag = '_aemulus_fmaxmocks_test_minus1' ]; then
+      mockdir=/mount/sirocco1/zz681/emulator/CMASSLOWZ_Msat_fmax_new/test_mocks_Aemulus6_NumberDensity_v2/mocks_minus
+    elif [ $mock_tag = '_aemulus_fmaxmocks_test_plus1' ]; then
+      mockdir=/mount/sirocco1/zz681/emulator/CMASSLOWZ_Msat_fmax_new/test_mocks_Aemulus6_NumberDensity_v2/mocks_plus
     fi
     mockname=mock_cosmo_${cosmo_id}_Box_${box}_HOD_${hod_id}_test_${test}.mock
 
@@ -105,7 +110,6 @@ for statistic in ${statistics[@]}; do
       n_radii=9
       n_spheres=1000000 #1e6
       density_threshold_frac=0.2
-      fn_ngalsmean=$PBS_O_WORKDIR/numgals/mean_numgals${mock_tag}.dat
       echo "$PBS_O_WORKDIR/run_statistics_aemulus $mockdir/$mockname $L $cosmofn ${cosmo_id} $redshift $statistic $fn_save $fn_ngalsmean $r_min $r_max $n_radii $n_spheres $density_threshold_frac $radius $factor_star $p"
       $PBS_O_WORKDIR/run_statistics_aemulus $mockdir/$mockname $L $cosmofn ${cosmo_id} $redshift $statistic $fn_save $fn_ngalsmean $r_min $r_max $n_radii $n_spheres $density_threshold_frac $radius $factor_star $p
     fi
@@ -115,7 +119,6 @@ for statistic in ${statistics[@]}; do
       n_radii=9
       n_spheres=1000000 #1e6
       density_threshold_frac=0.0
-      fn_ngalsmean=$PBS_O_WORKDIR/numgals/mean_numgals${mock_tag}.dat
       echo "$PBS_O_WORKDIR/run_statistics_aemulus $mockdir/$mockname $L $cosmofn ${cosmo_id} $redshift $statistic $fn_save $fn_ngalsmean $r_min $r_max $n_radii $n_spheres $density_threshold_frac $radius $factor_star $p"
       $PBS_O_WORKDIR/run_statistics_aemulus $mockdir/$mockname $L $cosmofn ${cosmo_id} $redshift $statistic $fn_save $fn_ngalsmean $r_min $r_max $n_radii $n_spheres $density_threshold_frac $radius $factor_star $p
     fi
@@ -123,7 +126,6 @@ for statistic in ${statistics[@]}; do
       radius=10.0
       factor_star=8.0
       p=1.0
-      fn_ngalsmean=$PBS_O_WORKDIR/numgals/mean_numgals${mock_tag}.dat
       echo "$PBS_O_WORKDIR/run_statistics_aemulus $mockdir/$mockname $L $cosmofn ${cosmo_id} $redshift $statistic $fn_save $fn_ngalsmean $r_min $r_max $n_radii $n_spheres $density_threshold_frac $radius $factor_star $p"
       $PBS_O_WORKDIR/run_statistics_aemulus $mockdir/$mockname $L $cosmofn ${cosmo_id} $redshift $statistic $fn_save $fn_ngalsmean $r_min $r_max $n_radii $n_spheres $density_threshold_frac $radius $factor_star $p
     fi

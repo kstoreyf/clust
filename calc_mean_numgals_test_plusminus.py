@@ -2,8 +2,8 @@ import numpy as np
 import subprocess
 
 
-#mock_tag_test = '_aemulus_fmaxmocks_test_minus'
-mock_tag_test = '_aemulus_fmaxmocks_test_plus'
+#mock_tag_test = '_aemulus_fmaxmocks_test_minus1'
+mock_tag_test = '_aemulus_fmaxmocks_test_plus1'
 if mock_tag_test=='_aemulus_test':
     mock_dir = '/mount/sirocco2/zz681/emulator/CMASSLOWZ/test_galaxy_mocks_wp_RSD/test_galaxy_mocks_new_f_env/mocks'
 elif mock_tag_test=='_aemulus_Msatmocks_test':
@@ -15,10 +15,13 @@ elif mock_tag_test=='_aemulus_fmaxmocks_test_minus':
     mock_dir = '/mount/sirocco1/zz681/emulator/CMASSLOWZ_Msat_fmax_new/test_mocks_Aemulus6_NumberDensity/mocks_minus'
 elif mock_tag_test=='_aemulus_fmaxmocks_test_plus':
     mock_dir = '/mount/sirocco1/zz681/emulator/CMASSLOWZ_Msat_fmax_new/test_mocks_Aemulus6_NumberDensity/mocks_plus'
+elif mock_tag_test=='_aemulus_fmaxmocks_test_minus1':
+    mock_dir = '/mount/sirocco1/zz681/emulator/CMASSLOWZ_Msat_fmax_new/test_mocks_Aemulus6_NumberDensity_v2/mocks_minus'
+elif mock_tag_test=='_aemulus_fmaxmocks_test_plus1':
+    mock_dir = '/mount/sirocco1/zz681/emulator/CMASSLOWZ_Msat_fmax_new/test_mocks_Aemulus6_NumberDensity_v2/mocks_plus'
 
-
-cosmo = 1
-hod = 19
+cosmo = 6
+hod = 69
 boxes = range(5)
 
 ngals_arr = []
@@ -37,4 +40,4 @@ print(np.std(ngals_arr))
 print(np.max(ngals_arr))
 print(np.min(ngals_arr))
 
-np.savetxt(f"numgals/mean_numgals{mock_tag_test}.dat", [np.mean(ngals_arr)])
+np.savetxt(f"numgals/mean_numgals{mock_tag_test}_c{cosmo}h{hod}.dat", [np.mean(ngals_arr)])

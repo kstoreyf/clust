@@ -6,7 +6,8 @@ statistics = ['wp', 'xi', 'xi2', 'mcf', 'upf']
 #statistics = ['mcf', 'upf']
 
 #mock_tag = '_aemulus_fmaxmocks_test'
-mock_tag = '_aemulus_fmaxmocks_test_plus'
+#mock_tag = '_aemulus_fmaxmocks_test_minus1'
+mock_tag = '_aemulus_fmaxmocks_test_plus1'
 testtag = ''
 
 nbins = 9
@@ -17,9 +18,11 @@ boxids = range(5)
 if mock_tag=='_aemulus_fmaxmocks_test':
     CC_test = range(0, 7)
     HH_test = range(0, nhods)
-elif mock_tag=='_aemulus_fmaxmocks_test_minus' or mock_tag=='_aemulus_fmaxmocks_test_plus':
-    CC_test = [1]
-    HH_test = [19]
+elif '_aemulus_fmaxmocks_test_minus' in mock_tag or '_aemulus_fmaxmocks_test_plus' in mock_tag:
+    CC_test = [6]
+    HH_test = [69]
+else:
+    raise ValueError("mock_tag not recognized!")
 
 for statistic in statistics:
     print("stat:", statistic)
